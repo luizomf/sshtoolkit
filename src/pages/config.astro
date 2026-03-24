@@ -107,37 +107,83 @@ import Footer from '../components/Footer.astro';
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 1.25rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
   }
 
   .host-card__header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1rem;
+    padding: 0.75rem 1.25rem;
+    cursor: pointer;
+    transition: background var(--transition);
+    user-select: none;
+  }
+
+  .host-card__header:hover {
+    background: var(--bg-secondary);
+  }
+
+  .host-card__header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .host-card__chevron {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    transition: transform var(--transition);
+    flex-shrink: 0;
+  }
+
+  .host-card--open .host-card__chevron {
+    transform: rotate(90deg);
   }
 
   .host-card__title {
     font-size: 1rem;
     color: var(--accent);
     font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .host-card__subtitle {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .host-card__remove {
     font-family: var(--font-mono);
-    font-size: 0.875rem;
-    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    padding: 0.2rem 0.5rem;
     background: none;
     border: 1px solid var(--danger);
     border-radius: var(--radius);
     color: var(--danger);
     cursor: pointer;
     transition: all var(--transition);
+    flex-shrink: 0;
   }
 
   .host-card__remove:hover {
     background: var(--danger-glow);
+  }
+
+  .host-card__body {
+    display: none;
+    padding: 0 1.25rem 1.25rem;
+  }
+
+  .host-card--open .host-card__body {
+    display: block;
   }
 
   /* Advanced toggle */
@@ -158,6 +204,10 @@ import Footer from '../components/Footer.astro';
 
   .advanced-fields {
     margin-top: 0.75rem;
+  }
+
+  [hidden] {
+    display: none !important;
   }
 
   /* Modal */
@@ -260,7 +310,7 @@ import Footer from '../components/Footer.astro';
     outputSection.hidden = hosts.length === 0;
 
     for (const host of hosts) {
-      hostsContainer.appendChild(createHostCard(host));
+      hostsContainer.appendChild(createHostCard(host, false));
     }
 
     updateOutput();
@@ -272,99 +322,115 @@ import Footer from '../components/Footer.astro';
   }
 
   // --- Host Card Builder ---
-  function createHostCard(entry: SshHostEntry): HTMLElement {
+  function createHostCard(entry: SshHostEntry, startOpen: boolean): HTMLElement {
     const card = document.createElement('div');
-    card.className = 'host-card';
+    card.className = 'host-card' + (startOpen ? ' host-card--open' : '');
     card.dataset.id = entry.id;
 
     const title = entry.host || 'novo-host';
+    const subtitle = [entry.user, entry.hostName].filter(Boolean).join('@') || '';
 
     card.innerHTML = `
       <div class="host-card__header">
-        <span class="host-card__title">Host ${title}</span>
+        <div class="host-card__header-left">
+          <span class="host-card__chevron">&#9654;</span>
+          <span class="host-card__title">Host ${title}</span>
+          <span class="host-card__subtitle">${esc(subtitle)}</span>
+        </div>
         <button class="host-card__remove" data-remove="${entry.id}">Remover</button>
       </div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Host (alias)</label>
-          <input type="text" data-field="host" value="${esc(entry.host)}" placeholder="prod-server" />
+      <div class="host-card__body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Host (alias)</label>
+            <input type="text" data-field="host" value="${esc(entry.host)}" placeholder="prod-server" />
+          </div>
+          <div class="form-group">
+            <label>HostName (IP ou domínio)</label>
+            <input type="text" data-field="hostName" value="${esc(entry.hostName)}" placeholder="192.168.1.10" />
+          </div>
+          <div class="form-group">
+            <label>Usuário</label>
+            <input type="text" data-field="user" value="${esc(entry.user)}" placeholder="deploy" />
+          </div>
+          <div class="form-group">
+            <label>Porta</label>
+            <input type="number" data-field="port" value="${entry.port || 22}" min="1" max="65535" />
+          </div>
+          <div class="form-group">
+            <label>IdentityFile</label>
+            <input type="text" data-field="identityFile" value="${esc(entry.identityFile)}" placeholder="~/.ssh/id_ed25519" />
+          </div>
+          <div class="form-group">
+            <label>ProxyJump</label>
+            <input type="text" data-field="proxyJump" value="${esc(entry.proxyJump)}" placeholder="bastion" />
+          </div>
         </div>
-        <div class="form-group">
-          <label>HostName (IP ou domínio)</label>
-          <input type="text" data-field="hostName" value="${esc(entry.hostName)}" placeholder="192.168.1.10" />
-        </div>
-        <div class="form-group">
-          <label>Usuário</label>
-          <input type="text" data-field="user" value="${esc(entry.user)}" placeholder="deploy" />
-        </div>
-        <div class="form-group">
-          <label>Porta</label>
-          <input type="number" data-field="port" value="${entry.port || 22}" min="1" max="65535" />
-        </div>
-        <div class="form-group">
-          <label>IdentityFile</label>
-          <input type="text" data-field="identityFile" value="${esc(entry.identityFile)}" placeholder="~/.ssh/id_ed25519" />
-        </div>
-        <div class="form-group">
-          <label>ProxyJump</label>
-          <input type="text" data-field="proxyJump" value="${esc(entry.proxyJump)}" placeholder="bastion" />
-        </div>
-      </div>
-      <button class="advanced-toggle" data-toggle="${entry.id}">+ Opções avançadas</button>
-      <div class="advanced-fields form-grid" hidden data-advanced="${entry.id}">
-        <div class="form-group">
-          <label>ForwardAgent</label>
-          <select data-field="forwardAgent">
-            <option value=""${entry.forwardAgent === undefined ? ' selected' : ''}>—</option>
-            <option value="yes"${entry.forwardAgent === true ? ' selected' : ''}>yes</option>
-            <option value="no"${entry.forwardAgent === false ? ' selected' : ''}>no</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>RequestTTY</label>
-          <select data-field="requestTTY">
-            <option value="auto"${entry.requestTTY === 'auto' || !entry.requestTTY ? ' selected' : ''}>auto</option>
-            <option value="yes"${entry.requestTTY === 'yes' ? ' selected' : ''}>yes</option>
-            <option value="no"${entry.requestTTY === 'no' ? ' selected' : ''}>no</option>
-            <option value="force"${entry.requestTTY === 'force' ? ' selected' : ''}>force</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>ServerAliveInterval <span class="text-muted">(s)</span></label>
-          <input type="number" data-field="serverAliveInterval" value="${entry.serverAliveInterval || ''}" min="0" placeholder="60" />
-        </div>
-        <div class="form-group">
-          <label>ServerAliveCountMax</label>
-          <input type="number" data-field="serverAliveCountMax" value="${entry.serverAliveCountMax || ''}" min="0" placeholder="3" />
-        </div>
-        <div class="form-group form-group--full">
-          <label>LocalForward <span class="text-muted">(um por linha: porta host:porta)</span></label>
-          <textarea data-field="localForward" rows="2" placeholder="5432 localhost:5432">${(entry.localForward || []).join('\n')}</textarea>
-        </div>
-        <div class="form-group form-group--full">
-          <label>RemoteForward <span class="text-muted">(um por linha)</span></label>
-          <textarea data-field="remoteForward" rows="2" placeholder="0.0.0.0:8080 localhost:3000">${(entry.remoteForward || []).join('\n')}</textarea>
-        </div>
-        <div class="form-group form-group--full">
-          <label>RemoteCommand</label>
-          <input type="text" data-field="remoteCommand" value="${esc(entry.remoteCommand)}" placeholder="tmux attach" />
-        </div>
-        <div class="form-group">
-          <label class="toggle">
-            <input type="checkbox" data-field="exitOnForwardFailure" ${entry.exitOnForwardFailure ? 'checked' : ''} />
-            <span class="toggle__track"></span>
-            <span>ExitOnForwardFailure</span>
-          </label>
+        <button class="advanced-toggle" data-toggle="${entry.id}">+ Opções avançadas</button>
+        <div class="advanced-fields form-grid" hidden data-advanced="${entry.id}">
+          <div class="form-group">
+            <label>ForwardAgent</label>
+            <select data-field="forwardAgent">
+              <option value=""${entry.forwardAgent === undefined ? ' selected' : ''}>—</option>
+              <option value="yes"${entry.forwardAgent === true ? ' selected' : ''}>yes</option>
+              <option value="no"${entry.forwardAgent === false ? ' selected' : ''}>no</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>RequestTTY</label>
+            <select data-field="requestTTY">
+              <option value="auto"${entry.requestTTY === 'auto' || !entry.requestTTY ? ' selected' : ''}>auto</option>
+              <option value="yes"${entry.requestTTY === 'yes' ? ' selected' : ''}>yes</option>
+              <option value="no"${entry.requestTTY === 'no' ? ' selected' : ''}>no</option>
+              <option value="force"${entry.requestTTY === 'force' ? ' selected' : ''}>force</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>ServerAliveInterval <span class="text-muted">(s)</span></label>
+            <input type="number" data-field="serverAliveInterval" value="${entry.serverAliveInterval || ''}" min="0" placeholder="60" />
+          </div>
+          <div class="form-group">
+            <label>ServerAliveCountMax</label>
+            <input type="number" data-field="serverAliveCountMax" value="${entry.serverAliveCountMax || ''}" min="0" placeholder="3" />
+          </div>
+          <div class="form-group form-group--full">
+            <label>LocalForward <span class="text-muted">(um por linha: porta host:porta)</span></label>
+            <textarea data-field="localForward" rows="2" placeholder="5432 localhost:5432">${(entry.localForward || []).join('\n')}</textarea>
+          </div>
+          <div class="form-group form-group--full">
+            <label>RemoteForward <span class="text-muted">(um por linha)</span></label>
+            <textarea data-field="remoteForward" rows="2" placeholder="0.0.0.0:8080 localhost:3000">${(entry.remoteForward || []).join('\n')}</textarea>
+          </div>
+          <div class="form-group form-group--full">
+            <label>RemoteCommand</label>
+            <input type="text" data-field="remoteCommand" value="${esc(entry.remoteCommand)}" placeholder="tmux attach" />
+          </div>
+          <div class="form-group">
+            <label class="toggle">
+              <input type="checkbox" data-field="exitOnForwardFailure" ${entry.exitOnForwardFailure ? 'checked' : ''} />
+              <span class="toggle__track"></span>
+              <span>ExitOnForwardFailure</span>
+            </label>
+          </div>
         </div>
       </div>
     `;
 
-    // Events
-    card.querySelector(`[data-remove="${entry.id}"]`)!.addEventListener('click', () => {
+    // Collapse toggle (click header, but not the remove button)
+    const header = card.querySelector('.host-card__header') as HTMLElement;
+    header.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('.host-card__remove')) return;
+      card.classList.toggle('host-card--open');
+    });
+
+    // Remove
+    card.querySelector(`[data-remove="${entry.id}"]`)!.addEventListener('click', (e) => {
+      e.stopPropagation();
       hosts = hosts.filter((h) => h.id !== entry.id);
       render();
     });
 
+    // Advanced toggle
     card.querySelector(`[data-toggle="${entry.id}"]`)!.addEventListener('click', (e) => {
       const btn = e.currentTarget as HTMLButtonElement;
       const advanced = card.querySelector(`[data-advanced="${entry.id}"]`) as HTMLElement;
@@ -379,9 +445,11 @@ import Footer from '../components/Footer.astro';
       const handler = () => {
         const field = input.dataset.field as keyof SshHostEntry;
         syncField(entry, field, input);
-        // Update card title live
+        // Update header info live
         const titleEl = card.querySelector('.host-card__title') as HTMLElement;
+        const subtitleEl = card.querySelector('.host-card__subtitle') as HTMLElement;
         titleEl.textContent = `Host ${entry.host || 'novo-host'}`;
+        subtitleEl.textContent = [entry.user, entry.hostName].filter(Boolean).join('@');
         updateOutput();
       };
       input.addEventListener('input', handler);
@@ -436,13 +504,16 @@ import Footer from '../components/Footer.astro';
 
   // --- Add Host ---
   $<HTMLButtonElement>('btn-add-host').addEventListener('click', () => {
-    hosts.push(createEmptyHost());
+    const newHost = createEmptyHost();
+    hosts.push(newHost);
+    // Render all collapsed, then append the new one open
     render();
-    // Focus the host alias input of the new card
-    const cards = hostsContainer.querySelectorAll('.host-card');
-    const lastCard = cards[cards.length - 1];
-    const firstInput = lastCard?.querySelector('input') as HTMLInputElement | null;
-    firstInput?.focus();
+    const lastCard = hostsContainer.querySelector(`[data-id="${newHost.id}"]`) as HTMLElement;
+    if (lastCard) {
+      lastCard.classList.add('host-card--open');
+      const firstInput = lastCard.querySelector('.host-card__body input') as HTMLInputElement | null;
+      firstInput?.focus();
+    }
   });
 
   // --- Import ---
