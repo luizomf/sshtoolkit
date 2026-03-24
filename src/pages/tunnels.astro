@@ -37,56 +37,22 @@ import Footer from '../components/Footer.astro';
   <!-- Tunnel Parameters -->
   <section class="section card" id="tunnel-form">
     <h2 class="section__title">Tunnel</h2>
-
-    <!-- Local Forward Fields -->
-    <div class="form-grid tunnel-fields" id="fields-local">
+    <div class="form-grid">
       <div class="form-group">
-        <label for="local-port">Porta Local</label>
-        <input type="number" id="local-port" value="8080" min="1" max="65535" />
+        <label for="listen-port" id="label-listen-port">Porta de escuta (sua máquina)</label>
+        <input type="number" id="listen-port" value="8080" min="1" max="65535" />
       </div>
       <div class="form-group">
-        <label for="local-bind">Bind Address <span class="text-muted">(opcional)</span></label>
-        <input type="text" id="local-bind" placeholder="localhost" />
+        <label for="bind-addr">Bind Address <span class="text-muted">(opcional)</span></label>
+        <input type="text" id="bind-addr" placeholder="localhost" />
       </div>
-      <div class="form-group">
-        <label for="remote-host">Host Remoto</label>
-        <input type="text" id="remote-host" value="localhost" />
+      <div class="form-group" id="group-dest-host">
+        <label for="dest-host" id="label-dest-host">Host de destino (visto do servidor)</label>
+        <input type="text" id="dest-host" value="localhost" />
       </div>
-      <div class="form-group">
-        <label for="remote-port">Porta Remota</label>
-        <input type="number" id="remote-port" value="8080" min="1" max="65535" />
-      </div>
-    </div>
-
-    <!-- Remote Forward Fields -->
-    <div class="form-grid tunnel-fields" id="fields-remote" hidden>
-      <div class="form-group">
-        <label for="r-remote-port">Porta Remota (no servidor)</label>
-        <input type="number" id="r-remote-port" value="8080" min="1" max="65535" />
-      </div>
-      <div class="form-group">
-        <label for="r-bind">Bind Address <span class="text-muted">(opcional)</span></label>
-        <input type="text" id="r-bind" placeholder="localhost" />
-      </div>
-      <div class="form-group">
-        <label for="r-local-host">Host Local</label>
-        <input type="text" id="r-local-host" value="localhost" />
-      </div>
-      <div class="form-group">
-        <label for="r-local-port">Porta Local</label>
-        <input type="number" id="r-local-port" value="3000" min="1" max="65535" />
-      </div>
-    </div>
-
-    <!-- Dynamic Forward Fields -->
-    <div class="form-grid tunnel-fields" id="fields-dynamic" hidden>
-      <div class="form-group">
-        <label for="d-local-port">Porta SOCKS</label>
-        <input type="number" id="d-local-port" value="1080" min="1" max="65535" />
-      </div>
-      <div class="form-group">
-        <label for="d-bind">Bind Address <span class="text-muted">(opcional)</span></label>
-        <input type="text" id="d-bind" placeholder="localhost" />
+      <div class="form-group" id="group-dest-port">
+        <label for="dest-port" id="label-dest-port">Porta de destino</label>
+        <input type="number" id="dest-port" value="8080" min="1" max="65535" />
       </div>
     </div>
   </section>
@@ -402,7 +368,17 @@ import Footer from '../components/Footer.astro';
   const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
   const typeBtns = document.querySelectorAll<HTMLButtonElement>('.type-btn');
-  const fieldSections = document.querySelectorAll<HTMLElement>('.tunnel-fields');
+
+  // Unified fields
+  const listenPort = $<HTMLInputElement>('listen-port');
+  const bindAddr = $<HTMLInputElement>('bind-addr');
+  const destHost = $<HTMLInputElement>('dest-host');
+  const destPort = $<HTMLInputElement>('dest-port');
+  const groupDestHost = $<HTMLElement>('group-dest-host');
+  const groupDestPort = $<HTMLElement>('group-dest-port');
+  const labelListenPort = $<HTMLElement>('label-listen-port');
+  const labelDestHost = $<HTMLElement>('label-dest-host');
+  const labelDestPort = $<HTMLElement>('label-dest-port');
 
   // Outputs
   const outputCommand = $<HTMLElement>('output-command');
@@ -415,42 +391,85 @@ import Footer from '../components/Footer.astro';
   const diagRight = $<HTMLElement>('diag-right');
   const diagDesc = $<HTMLElement>('diag-desc');
 
+  // --- Label configs per type ---
+  const labelConfig = {
+    local: {
+      listenPort: 'Porta de escuta (sua máquina)',
+      destHost: 'Host de destino (visto do servidor)',
+      destPort: 'Porta de destino',
+      showDest: true,
+      defaults: { listenPort: 8080, destHost: 'localhost', destPort: 8080 },
+    },
+    remote: {
+      listenPort: 'Porta de escuta (no servidor)',
+      destHost: 'Host de destino (sua máquina)',
+      destPort: 'Porta de destino',
+      showDest: true,
+      defaults: { listenPort: 8080, destHost: 'localhost', destPort: 3000 },
+    },
+    dynamic: {
+      listenPort: 'Porta SOCKS (sua máquina)',
+      destHost: '',
+      destPort: '',
+      showDest: false,
+      defaults: { listenPort: 1080, destHost: 'localhost', destPort: 0 },
+    },
+  };
+
   // --- Type switching ---
+  function switchType(type: TunnelType) {
+    currentType = type;
+    const cfg = labelConfig[type];
+
+    labelListenPort.textContent = cfg.listenPort;
+    labelDestHost.textContent = cfg.destHost;
+    labelDestPort.textContent = cfg.destPort;
+    groupDestHost.hidden = !cfg.showDest;
+    groupDestPort.hidden = !cfg.showDest;
+
+    listenPort.value = String(cfg.defaults.listenPort);
+    destHost.value = cfg.defaults.destHost;
+    destPort.value = String(cfg.defaults.destPort);
+    bindAddr.value = '';
+
+    typeBtns.forEach((b) => b.classList.remove('type-btn--active'));
+
+    update();
+  }
+
   typeBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
-      currentType = btn.dataset.type as TunnelType;
-      typeBtns.forEach((b) => b.classList.remove('type-btn--active'));
+      const type = btn.dataset.type as TunnelType;
+      switchType(type);
       btn.classList.add('type-btn--active');
-      fieldSections.forEach((s) => (s.hidden = true));
-      $<HTMLElement>(`fields-${currentType}`).hidden = false;
-      update();
     });
   });
 
   // --- Build config from form ---
   function getTunnelSpec(): TunnelSpec {
+    const bind = bindAddr.value || undefined;
     switch (currentType) {
       case 'local':
         return {
           type: 'local',
-          localPort: Number(($<HTMLInputElement>('local-port')).value) || 8080,
-          remoteHost: ($<HTMLInputElement>('remote-host')).value || 'localhost',
-          remotePort: Number(($<HTMLInputElement>('remote-port')).value) || 8080,
-          bindAddress: ($<HTMLInputElement>('local-bind')).value || undefined,
+          localPort: Number(listenPort.value) || 8080,
+          remoteHost: destHost.value || 'localhost',
+          remotePort: Number(destPort.value) || 8080,
+          bindAddress: bind,
         };
       case 'remote':
         return {
           type: 'remote',
-          remotePort: Number(($<HTMLInputElement>('r-remote-port')).value) || 8080,
-          localHost: ($<HTMLInputElement>('r-local-host')).value || 'localhost',
-          localPort: Number(($<HTMLInputElement>('r-local-port')).value) || 3000,
-          bindAddress: ($<HTMLInputElement>('r-bind')).value || undefined,
+          remotePort: Number(listenPort.value) || 8080,
+          localHost: destHost.value || 'localhost',
+          localPort: Number(destPort.value) || 3000,
+          bindAddress: bind,
         };
       case 'dynamic':
         return {
           type: 'dynamic',
-          localPort: Number(($<HTMLInputElement>('d-local-port')).value) || 1080,
-          bindAddress: ($<HTMLInputElement>('d-bind')).value || undefined,
+          localPort: Number(listenPort.value) || 1080,
+          bindAddress: bind,
         };
     }
   }
