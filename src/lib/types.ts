@@ -42,3 +42,25 @@ export interface TunnelConfig {
   tunnels: TunnelSpec[];
   options: TunnelOptions;
 }
+
+// --- SSH Client Config types ---
+
+export interface SshHostEntry {
+  id: string;
+  host: string;
+  hostName?: string;
+  user?: string;
+  port?: number;
+  identityFile?: string;
+  proxyJump?: string;
+  forwardAgent?: boolean;
+  localForward?: string[];
+  remoteForward?: string[];
+  dynamicForward?: string[];
+  serverAliveInterval?: number;
+  serverAliveCountMax?: number;
+  requestTTY?: 'auto' | 'yes' | 'no' | 'force';
+  remoteCommand?: string;
+  exitOnForwardFailure?: boolean;
+  extraOptions?: Record<string, string>;
+}

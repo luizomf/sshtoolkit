@@ -1,0 +1,491 @@
+---
+import Base from '../layouts/Base.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Base
+  title="SSH Config Builder — SSH Toolkit"
+  description="Monte seu ~/.ssh/config visualmente. Adicione hosts, ProxyJump, forwards e importe configs existentes."
+>
+  <header class="page-header">
+    <h1 class="page-header__title">
+      <span class="text-accent">$</span> Client Config
+    </h1>
+    <p class="page-header__tagline">
+      Monte seu ~/.ssh/config visualmente.
+    </p>
+  </header>
+
+  <!-- Actions bar -->
+  <section class="section actions-bar">
+    <button class="btn btn--accent" id="btn-add-host">+ Adicionar Host</button>
+    <button class="btn" id="btn-import">Importar Config</button>
+  </section>
+
+  <!-- Import modal -->
+  <div class="modal" id="import-modal" hidden>
+    <div class="modal__backdrop" id="import-backdrop"></div>
+    <div class="modal__content card">
+      <h2 class="section__title">Importar ~/.ssh/config</h2>
+      <p class="text-secondary" style="margin-bottom: 0.75rem; font-size: 0.875rem;">
+        Cole seu config existente abaixo. Ele será parseado em hosts editáveis.
+      </p>
+      <textarea
+        id="import-textarea"
+        class="import-textarea"
+        placeholder="Host prod&#10;    HostName 192.168.1.10&#10;    User deploy&#10;    Port 22"
+        rows="12"
+      ></textarea>
+      <div class="modal__actions">
+        <button class="btn btn--accent" id="btn-import-confirm">Importar</button>
+        <button class="btn" id="btn-import-cancel">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Host entries container -->
+  <section id="hosts-container"></section>
+
+  <!-- Empty state -->
+  <section class="empty-state card" id="empty-state">
+    <p class="text-secondary">
+      Nenhum host configurado. Clique em <strong>"+ Adicionar Host"</strong>
+      ou <strong>"Importar Config"</strong> para começar.
+    </p>
+  </section>
+
+  <!-- Output -->
+  <section class="section" id="output-section" hidden>
+    <h2 class="section__title">~/.ssh/config</h2>
+    <div class="code-preview-wrapper">
+      <button class="btn btn--sm copy-btn" data-copy="output-config">Copiar</button>
+      <div class="code-preview">
+        <code id="output-config"></code>
+      </div>
+    </div>
+    <div class="output-actions">
+      <button class="btn btn--sm" id="btn-download">Baixar config</button>
+    </div>
+  </section>
+
+  <Footer />
+</Base>
+
+<style>
+  .page-header {
+    text-align: center;
+    padding: 2rem 0 1.5rem;
+  }
+
+  .page-header__title {
+    font-size: 1.75rem;
+    letter-spacing: -0.02em;
+  }
+
+  .page-header__tagline {
+    margin-top: 0.5rem;
+    color: var(--text-secondary);
+    font-style: italic;
+  }
+
+  .section__title {
+    font-size: 1rem;
+    color: var(--accent);
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .actions-bar {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  /* Host Card */
+  .host-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .host-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .host-card__title {
+    font-size: 1rem;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .host-card__remove {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+    background: none;
+    border: 1px solid var(--danger);
+    border-radius: var(--radius);
+    color: var(--danger);
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  .host-card__remove:hover {
+    background: var(--danger-glow);
+  }
+
+  /* Advanced toggle */
+  .advanced-toggle {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem 0;
+    transition: color var(--transition);
+  }
+
+  .advanced-toggle:hover {
+    color: var(--accent);
+  }
+
+  .advanced-fields {
+    margin-top: 0.75rem;
+  }
+
+  /* Modal */
+  .modal {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+  }
+
+  .modal__content {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .modal__actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .import-textarea {
+    width: 100%;
+    resize: vertical;
+    min-height: 150px;
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.75rem;
+    outline: none;
+    transition: border-color var(--transition);
+  }
+
+  .import-textarea:focus {
+    border-color: var(--border-focus);
+    box-shadow: var(--glow-sm);
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 2rem;
+  }
+
+  /* Output actions */
+  .output-actions {
+    margin-top: 0.75rem;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  @media (max-width: 640px) {
+    .actions-bar {
+      flex-direction: column;
+    }
+  }
+</style>
+
+<script>
+  import { generateFullConfig, createEmptyHost } from '../lib/config-generator';
+  import { parseConfig } from '../lib/config-parser';
+  import { copyToClipboard } from '../lib/clipboard';
+  import { downloadFile } from '../lib/download';
+  import type { SshHostEntry } from '../lib/types';
+
+  let hosts: SshHostEntry[] = [];
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+
+  const hostsContainer = $<HTMLElement>('hosts-container');
+  const emptyState = $<HTMLElement>('empty-state');
+  const outputSection = $<HTMLElement>('output-section');
+  const outputConfig = $<HTMLElement>('output-config');
+  const importModal = $<HTMLElement>('import-modal');
+  const importTextarea = $<HTMLTextAreaElement>('import-textarea');
+
+  // --- Render ---
+  function render() {
+    hostsContainer.innerHTML = '';
+    emptyState.hidden = hosts.length > 0;
+    outputSection.hidden = hosts.length === 0;
+
+    for (const host of hosts) {
+      hostsContainer.appendChild(createHostCard(host));
+    }
+
+    updateOutput();
+  }
+
+  function updateOutput() {
+    const validHosts = hosts.filter((h) => h.host.trim());
+    outputConfig.textContent = generateFullConfig(validHosts);
+  }
+
+  // --- Host Card Builder ---
+  function createHostCard(entry: SshHostEntry): HTMLElement {
+    const card = document.createElement('div');
+    card.className = 'host-card';
+    card.dataset.id = entry.id;
+
+    const title = entry.host || 'novo-host';
+
+    card.innerHTML = `
+      <div class="host-card__header">
+        <span class="host-card__title">Host ${title}</span>
+        <button class="host-card__remove" data-remove="${entry.id}">Remover</button>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Host (alias)</label>
+          <input type="text" data-field="host" value="${esc(entry.host)}" placeholder="prod-server" />
+        </div>
+        <div class="form-group">
+          <label>HostName (IP ou domínio)</label>
+          <input type="text" data-field="hostName" value="${esc(entry.hostName)}" placeholder="192.168.1.10" />
+        </div>
+        <div class="form-group">
+          <label>Usuário</label>
+          <input type="text" data-field="user" value="${esc(entry.user)}" placeholder="deploy" />
+        </div>
+        <div class="form-group">
+          <label>Porta</label>
+          <input type="number" data-field="port" value="${entry.port || 22}" min="1" max="65535" />
+        </div>
+        <div class="form-group">
+          <label>IdentityFile</label>
+          <input type="text" data-field="identityFile" value="${esc(entry.identityFile)}" placeholder="~/.ssh/id_ed25519" />
+        </div>
+        <div class="form-group">
+          <label>ProxyJump</label>
+          <input type="text" data-field="proxyJump" value="${esc(entry.proxyJump)}" placeholder="bastion" />
+        </div>
+      </div>
+      <button class="advanced-toggle" data-toggle="${entry.id}">+ Opções avançadas</button>
+      <div class="advanced-fields form-grid" hidden data-advanced="${entry.id}">
+        <div class="form-group">
+          <label>ForwardAgent</label>
+          <select data-field="forwardAgent">
+            <option value=""${entry.forwardAgent === undefined ? ' selected' : ''}>—</option>
+            <option value="yes"${entry.forwardAgent === true ? ' selected' : ''}>yes</option>
+            <option value="no"${entry.forwardAgent === false ? ' selected' : ''}>no</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>RequestTTY</label>
+          <select data-field="requestTTY">
+            <option value="auto"${entry.requestTTY === 'auto' || !entry.requestTTY ? ' selected' : ''}>auto</option>
+            <option value="yes"${entry.requestTTY === 'yes' ? ' selected' : ''}>yes</option>
+            <option value="no"${entry.requestTTY === 'no' ? ' selected' : ''}>no</option>
+            <option value="force"${entry.requestTTY === 'force' ? ' selected' : ''}>force</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>ServerAliveInterval <span class="text-muted">(s)</span></label>
+          <input type="number" data-field="serverAliveInterval" value="${entry.serverAliveInterval || ''}" min="0" placeholder="60" />
+        </div>
+        <div class="form-group">
+          <label>ServerAliveCountMax</label>
+          <input type="number" data-field="serverAliveCountMax" value="${entry.serverAliveCountMax || ''}" min="0" placeholder="3" />
+        </div>
+        <div class="form-group form-group--full">
+          <label>LocalForward <span class="text-muted">(um por linha: porta host:porta)</span></label>
+          <textarea data-field="localForward" rows="2" placeholder="5432 localhost:5432">${(entry.localForward || []).join('\n')}</textarea>
+        </div>
+        <div class="form-group form-group--full">
+          <label>RemoteForward <span class="text-muted">(um por linha)</span></label>
+          <textarea data-field="remoteForward" rows="2" placeholder="0.0.0.0:8080 localhost:3000">${(entry.remoteForward || []).join('\n')}</textarea>
+        </div>
+        <div class="form-group form-group--full">
+          <label>RemoteCommand</label>
+          <input type="text" data-field="remoteCommand" value="${esc(entry.remoteCommand)}" placeholder="tmux attach" />
+        </div>
+        <div class="form-group">
+          <label class="toggle">
+            <input type="checkbox" data-field="exitOnForwardFailure" ${entry.exitOnForwardFailure ? 'checked' : ''} />
+            <span class="toggle__track"></span>
+            <span>ExitOnForwardFailure</span>
+          </label>
+        </div>
+      </div>
+    `;
+
+    // Events
+    card.querySelector(`[data-remove="${entry.id}"]`)!.addEventListener('click', () => {
+      hosts = hosts.filter((h) => h.id !== entry.id);
+      render();
+    });
+
+    card.querySelector(`[data-toggle="${entry.id}"]`)!.addEventListener('click', (e) => {
+      const btn = e.currentTarget as HTMLButtonElement;
+      const advanced = card.querySelector(`[data-advanced="${entry.id}"]`) as HTMLElement;
+      advanced.hidden = !advanced.hidden;
+      btn.textContent = advanced.hidden ? '+ Opções avançadas' : '− Opções avançadas';
+    });
+
+    // Field change listeners
+    card.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
+      '[data-field]',
+    ).forEach((input) => {
+      const handler = () => {
+        const field = input.dataset.field as keyof SshHostEntry;
+        syncField(entry, field, input);
+        // Update card title live
+        const titleEl = card.querySelector('.host-card__title') as HTMLElement;
+        titleEl.textContent = `Host ${entry.host || 'novo-host'}`;
+        updateOutput();
+      };
+      input.addEventListener('input', handler);
+      input.addEventListener('change', handler);
+    });
+
+    return card;
+  }
+
+  function syncField(
+    entry: SshHostEntry,
+    field: keyof SshHostEntry,
+    input: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
+  ) {
+    switch (field) {
+      case 'host':
+      case 'hostName':
+      case 'user':
+      case 'identityFile':
+      case 'proxyJump':
+      case 'remoteCommand':
+        (entry as Record<string, unknown>)[field] = input.value;
+        break;
+      case 'port':
+      case 'serverAliveInterval':
+      case 'serverAliveCountMax':
+        (entry as Record<string, unknown>)[field] = Number(input.value) || undefined;
+        break;
+      case 'forwardAgent':
+        entry.forwardAgent = input.value === 'yes' ? true : input.value === 'no' ? false : undefined;
+        break;
+      case 'requestTTY':
+        entry.requestTTY = input.value as SshHostEntry['requestTTY'];
+        break;
+      case 'exitOnForwardFailure':
+        entry.exitOnForwardFailure = (input as HTMLInputElement).checked;
+        break;
+      case 'localForward':
+      case 'remoteForward':
+        (entry as Record<string, unknown>)[field] = (input as HTMLTextAreaElement).value
+          .split('\n')
+          .map((l: string) => l.trim())
+          .filter(Boolean);
+        break;
+    }
+  }
+
+  function esc(value: string | undefined): string {
+    if (!value) return '';
+    return value.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  // --- Add Host ---
+  $<HTMLButtonElement>('btn-add-host').addEventListener('click', () => {
+    hosts.push(createEmptyHost());
+    render();
+    // Focus the host alias input of the new card
+    const cards = hostsContainer.querySelectorAll('.host-card');
+    const lastCard = cards[cards.length - 1];
+    const firstInput = lastCard?.querySelector('input') as HTMLInputElement | null;
+    firstInput?.focus();
+  });
+
+  // --- Import ---
+  $<HTMLButtonElement>('btn-import').addEventListener('click', () => {
+    importModal.hidden = false;
+    importTextarea.value = '';
+    importTextarea.focus();
+  });
+
+  $<HTMLElement>('import-backdrop').addEventListener('click', () => {
+    importModal.hidden = true;
+  });
+
+  $<HTMLButtonElement>('btn-import-cancel').addEventListener('click', () => {
+    importModal.hidden = true;
+  });
+
+  $<HTMLButtonElement>('btn-import-confirm').addEventListener('click', () => {
+    const raw = importTextarea.value.trim();
+    if (!raw) return;
+    const parsed = parseConfig(raw);
+    if (parsed.length === 0) return;
+    hosts.push(...parsed);
+    importModal.hidden = true;
+    render();
+  });
+
+  // --- Copy ---
+  document.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const targetId = btn.dataset.copy;
+      if (!targetId) return;
+      const target = $(targetId);
+      if (!target) return;
+      const success = await copyToClipboard(target.textContent || '');
+      const original = btn.textContent;
+      btn.textContent = success ? 'Copiado!' : 'Erro';
+      setTimeout(() => (btn.textContent = original), 1500);
+    });
+  });
+
+  // --- Download ---
+  $<HTMLButtonElement>('btn-download').addEventListener('click', () => {
+    const content = outputConfig.textContent || '';
+    if (content) downloadFile(content, 'config');
+  });
+
+  // Initial render
+  render();
+</script>
