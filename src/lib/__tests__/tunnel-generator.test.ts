@@ -380,7 +380,7 @@ describe('generateSshConfig', () => {
 });
 
 describe('generateDiagram', () => {
-  it('generates local tunnel diagram', () => {
+  it('generates local tunnel diagram in PT-BR', () => {
     const tunnel: TunnelSpec = {
       type: 'local',
       localPort: 8080,
@@ -388,14 +388,14 @@ describe('generateDiagram', () => {
       remotePort: 3306,
     };
     const diagram = generateDiagram(tunnel, makeOptions({ sshUser: 'user', sshServer: 'bastion' }));
-    expect(diagram.left).toBe('localhost:8080');
+    expect(diagram.left).toBe('sua máquina :8080');
     expect(diagram.middle).toBe('user@bastion');
     expect(diagram.right).toBe('db.internal:3306');
     expect(diagram.description).toContain('8080');
     expect(diagram.description).toContain('db.internal:3306');
   });
 
-  it('generates remote tunnel diagram', () => {
+  it('generates remote tunnel diagram in PT-BR', () => {
     const tunnel: TunnelSpec = {
       type: 'remote',
       remotePort: 8080,
@@ -406,10 +406,11 @@ describe('generateDiagram', () => {
     const diagram = generateDiagram(tunnel, makeOptions({ sshServer: 'vps' }));
     expect(diagram.left).toBe('localhost:3000');
     expect(diagram.right).toContain('8080');
+    expect(diagram.right).toContain('no servidor');
     expect(diagram.description).toContain('3000');
   });
 
-  it('generates dynamic tunnel diagram', () => {
+  it('generates dynamic tunnel diagram in PT-BR', () => {
     const tunnel: TunnelSpec = {
       type: 'dynamic',
       localPort: 1080,
@@ -417,6 +418,6 @@ describe('generateDiagram', () => {
     const diagram = generateDiagram(tunnel, makeOptions({ sshServer: 'vps' }));
     expect(diagram.left).toContain('1080');
     expect(diagram.left).toContain('SOCKS');
-    expect(diagram.right).toBe('any destination');
+    expect(diagram.right).toBe('qualquer destino');
   });
 });

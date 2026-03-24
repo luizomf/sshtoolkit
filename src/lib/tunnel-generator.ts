@@ -183,24 +183,24 @@ export function generateDiagram(tunnel: TunnelSpec, options: TunnelOptions): Tun
   switch (tunnel.type) {
     case 'local':
       return {
-        left: `localhost:${tunnel.localPort}`,
+        left: `sua máquina :${tunnel.localPort}`,
         middle: server,
         right: `${tunnel.remoteHost}:${tunnel.remotePort}`,
-        description: `Traffic on your port ${tunnel.localPort} goes through ${server} to reach ${tunnel.remoteHost}:${tunnel.remotePort}`,
+        description: `Tráfego na sua porta ${tunnel.localPort} passa por ${server} e chega em ${tunnel.remoteHost}:${tunnel.remotePort}`,
       };
     case 'remote':
       return {
         left: `${tunnel.localHost}:${tunnel.localPort}`,
         middle: server,
-        right: `${tunnel.bindAddress || 'localhost'}:${tunnel.remotePort} (on server)`,
-        description: `Port ${tunnel.remotePort} on ${options.sshServer} forwards back to your ${tunnel.localHost}:${tunnel.localPort}`,
+        right: `${tunnel.bindAddress || 'localhost'}:${tunnel.remotePort} (no servidor)`,
+        description: `A porta ${tunnel.remotePort} no ${options.sshServer} encaminha de volta para o seu ${tunnel.localHost}:${tunnel.localPort}`,
       };
     case 'dynamic':
       return {
-        left: `localhost:${tunnel.localPort} (SOCKS)`,
+        left: `sua máquina :${tunnel.localPort} (SOCKS)`,
         middle: server,
-        right: 'any destination',
-        description: `SOCKS proxy on port ${tunnel.localPort} — all traffic routed through ${server}`,
+        right: 'qualquer destino',
+        description: `Proxy SOCKS na porta ${tunnel.localPort} — todo tráfego sai por ${server}`,
       };
   }
 }
