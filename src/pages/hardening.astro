@@ -1,0 +1,658 @@
+---
+import Base from '../layouts/Base.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Base
+  title="Server Hardening — SSH Toolkit"
+  description="Gere um sshd_config endurecido com score de segurança, presets e boas práticas."
+>
+  <header class="page-header">
+    <h1 class="page-header__title">
+      <span class="text-accent">$</span> Server Hardening
+    </h1>
+    <p class="page-header__tagline">
+      Gere um sshd_config endurecido com score de segurança.
+    </p>
+  </header>
+
+  <!-- Presets -->
+  <section class="section">
+    <div class="preset-selector">
+      <button class="preset-btn preset-btn--active" data-preset="paranoid">
+        <span class="preset-btn__grade">A+</span>
+        <span class="preset-btn__label">Paranoico</span>
+        <span class="preset-btn__desc">Máxima segurança</span>
+      </button>
+      <button class="preset-btn" data-preset="balanced">
+        <span class="preset-btn__grade">A</span>
+        <span class="preset-btn__label">Equilibrado</span>
+        <span class="preset-btn__desc">Uso geral</span>
+      </button>
+      <button class="preset-btn" data-preset="permissive">
+        <span class="preset-btn__grade">B</span>
+        <span class="preset-btn__label">Permissivo</span>
+        <span class="preset-btn__desc">Lab / testes</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Security Score -->
+  <section class="section">
+    <div class="score-card card">
+      <div class="score-card__grade" id="score-grade">A</div>
+      <div class="score-card__info">
+        <div class="score-card__bar">
+          <div class="score-card__fill" id="score-fill" style="width: 98%"></div>
+        </div>
+        <span class="score-card__value" id="score-value">98/100</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Warnings -->
+  <section class="section" id="warnings-section" hidden>
+    <div id="warnings-container"></div>
+  </section>
+
+  <!-- Authentication -->
+  <section class="section card">
+    <h2 class="section__title">Autenticação</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="port">Porta SSH</label>
+        <input type="number" id="port" value="22" min="1" max="65535" />
+      </div>
+      <div class="form-group">
+        <label for="permit-root-login">PermitRootLogin</label>
+        <select id="permit-root-login">
+          <option value="no" selected>no</option>
+          <option value="prohibit-password">prohibit-password</option>
+          <option value="forced-commands-only">forced-commands-only</option>
+          <option value="yes">yes</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="toggle">
+          <input type="checkbox" id="pubkey-auth" checked />
+          <span class="toggle__track"></span>
+          <span>PubkeyAuthentication</span>
+        </label>
+      </div>
+      <div class="form-group">
+        <label class="toggle">
+          <input type="checkbox" id="password-auth" />
+          <span class="toggle__track"></span>
+          <span>PasswordAuthentication</span>
+        </label>
+      </div>
+      <div class="form-group">
+        <label for="auth-methods">AuthenticationMethods</label>
+        <input type="text" id="auth-methods" value="publickey" placeholder="publickey" />
+      </div>
+      <div class="form-group">
+        <label for="max-auth-tries">MaxAuthTries</label>
+        <input type="number" id="max-auth-tries" value="3" min="1" max="20" />
+      </div>
+      <div class="form-group">
+        <label for="login-grace-time">LoginGraceTime <span class="text-muted">(s)</span></label>
+        <input type="number" id="login-grace-time" value="30" min="1" />
+      </div>
+      <div class="form-group">
+        <label class="toggle">
+          <input type="checkbox" id="permit-empty-passwords" />
+          <span class="toggle__track"></span>
+          <span>PermitEmptyPasswords</span>
+        </label>
+      </div>
+      <div class="form-group">
+        <label class="toggle">
+          <input type="checkbox" id="use-pam" checked />
+          <span class="toggle__track"></span>
+          <span>UsePAM</span>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <!-- Access Control -->
+  <section class="section card">
+    <h2 class="section__title">Controle de Acesso</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="allow-users">AllowUsers <span class="text-muted">(espaço entre nomes)</span></label>
+        <input type="text" id="allow-users" placeholder="deploy admin" />
+      </div>
+      <div class="form-group">
+        <label for="allow-groups">AllowGroups</label>
+        <input type="text" id="allow-groups" placeholder="ssh-users" />
+      </div>
+      <div class="form-group">
+        <label for="deny-users">DenyUsers</label>
+        <input type="text" id="deny-users" placeholder="" />
+      </div>
+      <div class="form-group">
+        <label for="deny-groups">DenyGroups</label>
+        <input type="text" id="deny-groups" placeholder="" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Network -->
+  <section class="section card">
+    <h2 class="section__title">Rede</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="listen-address">ListenAddress <span class="text-muted">(opcional)</span></label>
+        <input type="text" id="listen-address" placeholder="0.0.0.0" />
+      </div>
+      <div class="form-group">
+        <label for="address-family">AddressFamily</label>
+        <select id="address-family">
+          <option value="any" selected>any</option>
+          <option value="inet">inet (IPv4)</option>
+          <option value="inet6">inet6 (IPv6)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="client-alive-interval">ClientAliveInterval <span class="text-muted">(s)</span></label>
+        <input type="number" id="client-alive-interval" value="300" min="0" />
+      </div>
+      <div class="form-group">
+        <label for="client-alive-count">ClientAliveCountMax</label>
+        <input type="number" id="client-alive-count" value="2" min="0" />
+      </div>
+      <div class="form-group">
+        <label class="toggle">
+          <input type="checkbox" id="use-dns" />
+          <span class="toggle__track"></span>
+          <span>UseDNS</span>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <!-- Security -->
+  <section class="section card">
+    <h2 class="section__title">Segurança</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="toggle">
+          <input type="checkbox" id="x11-forwarding" />
+          <span class="toggle__track"></span>
+          <span>X11Forwarding</span>
+        </label>
+      </div>
+      <div class="form-group">
+        <label class="toggle">
+          <input type="checkbox" id="agent-forwarding" />
+          <span class="toggle__track"></span>
+          <span>AllowAgentForwarding</span>
+        </label>
+      </div>
+      <div class="form-group">
+        <label class="toggle">
+          <input type="checkbox" id="tcp-forwarding" />
+          <span class="toggle__track"></span>
+          <span>AllowTcpForwarding</span>
+        </label>
+      </div>
+      <div class="form-group">
+        <label class="toggle">
+          <input type="checkbox" id="stream-local-forwarding" />
+          <span class="toggle__track"></span>
+          <span>AllowStreamLocalForwarding</span>
+        </label>
+      </div>
+      <div class="form-group">
+        <label for="gateway-ports">GatewayPorts</label>
+        <select id="gateway-ports">
+          <option value="no" selected>no</option>
+          <option value="clientspecified">clientspecified</option>
+          <option value="yes">yes</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="toggle">
+          <input type="checkbox" id="permit-tunnel" />
+          <span class="toggle__track"></span>
+          <span>PermitTunnel</span>
+        </label>
+      </div>
+      <div class="form-group">
+        <label class="toggle">
+          <input type="checkbox" id="permit-user-env" />
+          <span class="toggle__track"></span>
+          <span>PermitUserEnvironment</span>
+        </label>
+      </div>
+      <div class="form-group">
+        <label class="toggle">
+          <input type="checkbox" id="permit-user-rc" />
+          <span class="toggle__track"></span>
+          <span>PermitUserRC</span>
+        </label>
+      </div>
+      <div class="form-group">
+        <label class="toggle">
+          <input type="checkbox" id="strict-modes" checked />
+          <span class="toggle__track"></span>
+          <span>StrictModes</span>
+        </label>
+      </div>
+      <div class="form-group">
+        <label for="max-sessions">MaxSessions</label>
+        <input type="number" id="max-sessions" value="5" min="1" />
+      </div>
+      <div class="form-group">
+        <label for="max-startups">MaxStartups</label>
+        <input type="text" id="max-startups" value="10:30:60" />
+      </div>
+      <div class="form-group">
+        <label for="log-level">LogLevel</label>
+        <select id="log-level">
+          <option value="QUIET">QUIET</option>
+          <option value="FATAL">FATAL</option>
+          <option value="ERROR">ERROR</option>
+          <option value="INFO">INFO</option>
+          <option value="VERBOSE" selected>VERBOSE</option>
+          <option value="DEBUG">DEBUG</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- Banners -->
+  <section class="section card">
+    <h2 class="section__title">Banners</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="toggle">
+          <input type="checkbox" id="print-motd" />
+          <span class="toggle__track"></span>
+          <span>PrintMotd</span>
+        </label>
+      </div>
+      <div class="form-group">
+        <label class="toggle">
+          <input type="checkbox" id="print-last-log" checked />
+          <span class="toggle__track"></span>
+          <span>PrintLastLog</span>
+        </label>
+      </div>
+      <div class="form-group form-group--full">
+        <label for="banner">Banner <span class="text-muted">(caminho do arquivo)</span></label>
+        <input type="text" id="banner" placeholder="/etc/ssh/banner.txt" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Output: sshd_config -->
+  <section class="section">
+    <h2 class="section__title">sshd_config</h2>
+    <div class="code-preview-wrapper">
+      <button class="btn btn--sm copy-btn" data-copy="output-sshd">Copiar</button>
+      <div class="code-preview">
+        <code id="output-sshd"></code>
+      </div>
+    </div>
+    <div class="output-actions">
+      <button class="btn btn--sm" id="btn-download-config">Baixar sshd_config</button>
+      <button class="btn btn--sm" id="btn-download-script">Baixar script de aplicação</button>
+    </div>
+  </section>
+
+  <Footer />
+</Base>
+
+<style is:global>
+  .page-header {
+    text-align: center;
+    padding: 2rem 0 1.5rem;
+  }
+
+  .page-header__title {
+    font-size: 1.75rem;
+    letter-spacing: -0.02em;
+  }
+
+  .page-header__tagline {
+    margin-top: 0.5rem;
+    color: var(--text-secondary);
+    font-style: italic;
+  }
+
+  .section__title {
+    font-size: 1rem;
+    color: var(--accent);
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Presets */
+  .preset-selector {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .preset-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all var(--transition);
+    font-family: var(--font-mono);
+  }
+
+  .preset-btn:hover {
+    border-color: var(--accent);
+    box-shadow: var(--glow-sm);
+  }
+
+  .preset-btn--active {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+  }
+
+  .preset-btn__grade {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .preset-btn__label {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+
+  .preset-btn__desc {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  /* Score Card */
+  .score-card {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1rem 1.5rem;
+  }
+
+  .score-card__grade {
+    font-size: 2.5rem;
+    font-weight: 700;
+    min-width: 3rem;
+    text-align: center;
+  }
+
+  .score-card__info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .score-card__bar {
+    flex: 1;
+    height: 8px;
+    background: var(--bg-input);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .score-card__fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 300ms ease, background 300ms ease;
+  }
+
+  .score-card__value {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+
+  /* Warnings */
+  .warning-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius);
+    font-size: 0.8rem;
+    margin-bottom: 0.375rem;
+  }
+
+  .warning-item--danger {
+    background: var(--danger-glow);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+  }
+
+  .warning-item--warn {
+    background: var(--accent-glow);
+    color: var(--accent);
+    border: 1px solid var(--accent-dim);
+  }
+
+  .warning-item--info {
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+
+  /* Output actions */
+  .output-actions {
+    margin-top: 0.75rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  @media (max-width: 640px) {
+    .preset-selector {
+      flex-direction: column;
+    }
+
+    .score-card {
+      flex-direction: column;
+      text-align: center;
+    }
+  }
+</style>
+
+<script>
+  import { generateSshdConfig, generateApplyScript } from '../lib/sshd-generator';
+  import { getPreset, calculateSecurityScore } from '../lib/sshd-options';
+  import type { PresetName } from '../lib/sshd-options';
+  import type { SshdConfig } from '../lib/types';
+  import { copyToClipboard } from '../lib/clipboard';
+  import { downloadFile } from '../lib/download';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+
+  const presetBtns = document.querySelectorAll<HTMLButtonElement>('.preset-btn');
+  const outputSshd = $<HTMLElement>('output-sshd');
+  const scoreGrade = $<HTMLElement>('score-grade');
+  const scoreFill = $<HTMLElement>('score-fill');
+  const scoreValue = $<HTMLElement>('score-value');
+  const warningsSection = $<HTMLElement>('warnings-section');
+  const warningsContainer = $<HTMLElement>('warnings-container');
+
+  // --- Apply preset to form ---
+  function applyPreset(name: PresetName) {
+    const config = getPreset(name);
+    setFormFromConfig(config);
+    presetBtns.forEach((b) => b.classList.remove('preset-btn--active'));
+    update();
+  }
+
+  presetBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const preset = btn.dataset.preset as PresetName;
+      applyPreset(preset);
+      btn.classList.add('preset-btn--active');
+    });
+  });
+
+  // --- Form ↔ Config ---
+  function setFormFromConfig(c: SshdConfig) {
+    ($<HTMLInputElement>('port')).value = String(c.port);
+    ($<HTMLSelectElement>('permit-root-login')).value = c.permitRootLogin;
+    ($<HTMLInputElement>('pubkey-auth')).checked = c.pubkeyAuthentication;
+    ($<HTMLInputElement>('password-auth')).checked = c.passwordAuthentication;
+    ($<HTMLInputElement>('auth-methods')).value = c.authenticationMethods;
+    ($<HTMLInputElement>('max-auth-tries')).value = String(c.maxAuthTries);
+    ($<HTMLInputElement>('login-grace-time')).value = String(c.loginGraceTime);
+    ($<HTMLInputElement>('permit-empty-passwords')).checked = c.permitEmptyPasswords;
+    ($<HTMLInputElement>('use-pam')).checked = c.usePAM;
+
+    ($<HTMLInputElement>('allow-users')).value = c.allowUsers;
+    ($<HTMLInputElement>('allow-groups')).value = c.allowGroups;
+    ($<HTMLInputElement>('deny-users')).value = c.denyUsers;
+    ($<HTMLInputElement>('deny-groups')).value = c.denyGroups;
+
+    ($<HTMLInputElement>('listen-address')).value = c.listenAddress;
+    ($<HTMLSelectElement>('address-family')).value = c.addressFamily;
+    ($<HTMLInputElement>('client-alive-interval')).value = String(c.clientAliveInterval);
+    ($<HTMLInputElement>('client-alive-count')).value = String(c.clientAliveCountMax);
+    ($<HTMLInputElement>('use-dns')).checked = c.useDNS;
+
+    ($<HTMLInputElement>('x11-forwarding')).checked = c.x11Forwarding;
+    ($<HTMLInputElement>('agent-forwarding')).checked = c.allowAgentForwarding;
+    ($<HTMLInputElement>('tcp-forwarding')).checked = c.allowTcpForwarding;
+    ($<HTMLInputElement>('stream-local-forwarding')).checked = c.allowStreamLocalForwarding;
+    ($<HTMLSelectElement>('gateway-ports')).value = c.gatewayPorts;
+    ($<HTMLInputElement>('permit-tunnel')).checked = c.permitTunnel;
+    ($<HTMLInputElement>('permit-user-env')).checked = c.permitUserEnvironment;
+    ($<HTMLInputElement>('permit-user-rc')).checked = c.permitUserRC;
+    ($<HTMLInputElement>('strict-modes')).checked = c.strictModes;
+    ($<HTMLInputElement>('max-sessions')).value = String(c.maxSessions);
+    ($<HTMLInputElement>('max-startups')).value = c.maxStartups;
+    ($<HTMLSelectElement>('log-level')).value = c.logLevel;
+
+    ($<HTMLInputElement>('print-motd')).checked = c.printMotd;
+    ($<HTMLInputElement>('print-last-log')).checked = c.printLastLog;
+    ($<HTMLInputElement>('banner')).value = c.banner;
+  }
+
+  function getConfigFromForm(): SshdConfig {
+    return {
+      port: Number(($<HTMLInputElement>('port')).value) || 22,
+      permitRootLogin: ($<HTMLSelectElement>('permit-root-login')).value as SshdConfig['permitRootLogin'],
+      pubkeyAuthentication: ($<HTMLInputElement>('pubkey-auth')).checked,
+      passwordAuthentication: ($<HTMLInputElement>('password-auth')).checked,
+      kbdInteractiveAuthentication: !($<HTMLInputElement>('pubkey-auth')).checked,
+      challengeResponseAuthentication: false,
+      authenticationMethods: ($<HTMLInputElement>('auth-methods')).value || 'publickey',
+      maxAuthTries: Number(($<HTMLInputElement>('max-auth-tries')).value) || 3,
+      loginGraceTime: Number(($<HTMLInputElement>('login-grace-time')).value) || 30,
+      permitEmptyPasswords: ($<HTMLInputElement>('permit-empty-passwords')).checked,
+      usePAM: ($<HTMLInputElement>('use-pam')).checked,
+
+      allowUsers: ($<HTMLInputElement>('allow-users')).value,
+      allowGroups: ($<HTMLInputElement>('allow-groups')).value,
+      denyUsers: ($<HTMLInputElement>('deny-users')).value,
+      denyGroups: ($<HTMLInputElement>('deny-groups')).value,
+
+      listenAddress: ($<HTMLInputElement>('listen-address')).value,
+      addressFamily: ($<HTMLSelectElement>('address-family')).value as SshdConfig['addressFamily'],
+      clientAliveInterval: Number(($<HTMLInputElement>('client-alive-interval')).value) || 300,
+      clientAliveCountMax: Number(($<HTMLInputElement>('client-alive-count')).value) || 2,
+      useDNS: ($<HTMLInputElement>('use-dns')).checked,
+
+      x11Forwarding: ($<HTMLInputElement>('x11-forwarding')).checked,
+      allowAgentForwarding: ($<HTMLInputElement>('agent-forwarding')).checked,
+      allowTcpForwarding: ($<HTMLInputElement>('tcp-forwarding')).checked,
+      allowStreamLocalForwarding: ($<HTMLInputElement>('stream-local-forwarding')).checked,
+      gatewayPorts: ($<HTMLSelectElement>('gateway-ports')).value as SshdConfig['gatewayPorts'],
+      permitTunnel: ($<HTMLInputElement>('permit-tunnel')).checked,
+      permitUserEnvironment: ($<HTMLInputElement>('permit-user-env')).checked,
+      permitUserRC: ($<HTMLInputElement>('permit-user-rc')).checked,
+      strictModes: ($<HTMLInputElement>('strict-modes')).checked,
+      maxSessions: Number(($<HTMLInputElement>('max-sessions')).value) || 5,
+      maxStartups: ($<HTMLInputElement>('max-startups')).value || '10:30:60',
+      logLevel: ($<HTMLSelectElement>('log-level')).value,
+
+      printMotd: ($<HTMLInputElement>('print-motd')).checked,
+      printLastLog: ($<HTMLInputElement>('print-last-log')).checked,
+      banner: ($<HTMLInputElement>('banner')).value,
+    };
+  }
+
+  // --- Update ---
+  function getScoreColor(score: number): string {
+    if (score >= 90) return '#00cc7f';
+    if (score >= 75) return '#ffb000';
+    if (score >= 60) return '#ff8c00';
+    return '#ff4466';
+  }
+
+  function update() {
+    const config = getConfigFromForm();
+    outputSshd.textContent = generateSshdConfig(config);
+
+    const { score, grade, warnings } = calculateSecurityScore(config);
+    const color = getScoreColor(score);
+
+    scoreGrade.textContent = grade;
+    scoreGrade.style.color = color;
+    scoreFill.style.width = `${score}%`;
+    scoreFill.style.background = color;
+    scoreValue.textContent = `${score}/100`;
+
+    // Warnings
+    warningsSection.hidden = warnings.length === 0;
+    warningsContainer.innerHTML = warnings
+      .map(
+        (w) =>
+          `<div class="warning-item warning-item--${w.severity}">${w.message}</div>`,
+      )
+      .join('');
+  }
+
+  // --- Listeners ---
+  document.querySelectorAll('input, select').forEach((input) => {
+    input.addEventListener('input', update);
+    input.addEventListener('change', update);
+  });
+
+  // --- Copy ---
+  document.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const targetId = btn.dataset.copy;
+      if (!targetId) return;
+      const target = $(targetId);
+      if (!target) return;
+      const success = await copyToClipboard(target.textContent || '');
+      const original = btn.textContent;
+      btn.textContent = success ? 'Copiado!' : 'Erro';
+      setTimeout(() => (btn.textContent = original), 1500);
+    });
+  });
+
+  // --- Downloads ---
+  $<HTMLButtonElement>('btn-download-config').addEventListener('click', () => {
+    const content = outputSshd.textContent || '';
+    if (content) downloadFile(content, 'sshd_config');
+  });
+
+  $<HTMLButtonElement>('btn-download-script').addEventListener('click', () => {
+    downloadFile(generateApplyScript(), 'apply-sshd.sh');
+  });
+
+  // Initial render
+  update();
+</script>

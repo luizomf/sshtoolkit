@@ -64,3 +64,52 @@ export interface SshHostEntry {
   exitOnForwardFailure?: boolean;
   extraOptions?: Record<string, string>;
 }
+
+// --- SSHD Hardening types ---
+
+export interface SshdConfig {
+  // Basic
+  port: number;
+  permitRootLogin: 'yes' | 'no' | 'prohibit-password' | 'forced-commands-only';
+  passwordAuthentication: boolean;
+  pubkeyAuthentication: boolean;
+  kbdInteractiveAuthentication: boolean;
+  challengeResponseAuthentication: boolean;
+  authenticationMethods: string;
+  maxAuthTries: number;
+  loginGraceTime: number;
+  permitEmptyPasswords: boolean;
+
+  // Access Control
+  allowUsers: string;
+  allowGroups: string;
+  denyUsers: string;
+  denyGroups: string;
+
+  // Network
+  listenAddress: string;
+  addressFamily: 'any' | 'inet' | 'inet6';
+  clientAliveInterval: number;
+  clientAliveCountMax: number;
+  useDNS: boolean;
+  usePAM: boolean;
+
+  // Security
+  x11Forwarding: boolean;
+  allowAgentForwarding: boolean;
+  allowTcpForwarding: boolean;
+  allowStreamLocalForwarding: boolean;
+  gatewayPorts: 'no' | 'yes' | 'clientspecified';
+  permitTunnel: boolean;
+  permitUserEnvironment: boolean;
+  permitUserRC: boolean;
+  strictModes: boolean;
+  maxSessions: number;
+  maxStartups: string;
+  logLevel: string;
+
+  // Banners
+  banner: string;
+  printMotd: boolean;
+  printLastLog: boolean;
+}
