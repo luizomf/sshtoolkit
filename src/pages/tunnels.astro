@@ -1,0 +1,521 @@
+---
+import Base from '../layouts/Base.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Base
+  title="SSH Tunnel Builder — SSH Toolkit"
+  description="Monte comandos de SSH Tunnel visualmente. Local (-L), Remote (-R) e Dynamic (-D) com diagramas e saída de configuração."
+>
+  <header class="page-header">
+    <h1 class="page-header__title">
+      <span class="text-accent">$</span> Tunnel Builder
+    </h1>
+    <p class="page-header__tagline">
+      Monte comandos de SSH Tunnel com diagramas visuais.
+    </p>
+  </header>
+
+  <!-- Tunnel Type Selector -->
+  <section class="section">
+    <div class="type-selector" id="type-selector">
+      <button class="type-btn type-btn--active" data-type="local">
+        <span class="type-btn__flag">-L</span>
+        <span class="type-btn__label">Local Forward</span>
+      </button>
+      <button class="type-btn" data-type="remote">
+        <span class="type-btn__flag">-R</span>
+        <span class="type-btn__label">Remote Forward</span>
+      </button>
+      <button class="type-btn" data-type="dynamic">
+        <span class="type-btn__flag">-D</span>
+        <span class="type-btn__label">Dynamic (SOCKS)</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Tunnel Parameters -->
+  <section class="section card" id="tunnel-form">
+    <h2 class="section__title">Tunnel</h2>
+
+    <!-- Local Forward Fields -->
+    <div class="form-grid tunnel-fields" id="fields-local">
+      <div class="form-group">
+        <label for="local-port">Porta Local</label>
+        <input type="number" id="local-port" value="8080" min="1" max="65535" />
+      </div>
+      <div class="form-group">
+        <label for="local-bind">Bind Address <span class="text-muted">(opcional)</span></label>
+        <input type="text" id="local-bind" placeholder="localhost" />
+      </div>
+      <div class="form-group">
+        <label for="remote-host">Host Remoto</label>
+        <input type="text" id="remote-host" value="localhost" />
+      </div>
+      <div class="form-group">
+        <label for="remote-port">Porta Remota</label>
+        <input type="number" id="remote-port" value="8080" min="1" max="65535" />
+      </div>
+    </div>
+
+    <!-- Remote Forward Fields -->
+    <div class="form-grid tunnel-fields" id="fields-remote" hidden>
+      <div class="form-group">
+        <label for="r-remote-port">Porta Remota (no servidor)</label>
+        <input type="number" id="r-remote-port" value="8080" min="1" max="65535" />
+      </div>
+      <div class="form-group">
+        <label for="r-bind">Bind Address <span class="text-muted">(opcional)</span></label>
+        <input type="text" id="r-bind" placeholder="localhost" />
+      </div>
+      <div class="form-group">
+        <label for="r-local-host">Host Local</label>
+        <input type="text" id="r-local-host" value="localhost" />
+      </div>
+      <div class="form-group">
+        <label for="r-local-port">Porta Local</label>
+        <input type="number" id="r-local-port" value="3000" min="1" max="65535" />
+      </div>
+    </div>
+
+    <!-- Dynamic Forward Fields -->
+    <div class="form-grid tunnel-fields" id="fields-dynamic" hidden>
+      <div class="form-group">
+        <label for="d-local-port">Porta SOCKS</label>
+        <input type="number" id="d-local-port" value="1080" min="1" max="65535" />
+      </div>
+      <div class="form-group">
+        <label for="d-bind">Bind Address <span class="text-muted">(opcional)</span></label>
+        <input type="text" id="d-bind" placeholder="localhost" />
+      </div>
+    </div>
+  </section>
+
+  <!-- SSH Connection -->
+  <section class="section card">
+    <h2 class="section__title">Conexão SSH</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="ssh-server">Servidor SSH</label>
+        <input type="text" id="ssh-server" placeholder="seu-servidor.com" />
+      </div>
+      <div class="form-group">
+        <label for="ssh-user">Usuário <span class="text-muted">(opcional)</span></label>
+        <input type="text" id="ssh-user" placeholder="deploy" />
+      </div>
+      <div class="form-group">
+        <label for="ssh-port">Porta <span class="text-muted">(padrão: 22)</span></label>
+        <input type="number" id="ssh-port" value="22" min="1" max="65535" />
+      </div>
+      <div class="form-group">
+        <label for="jump-host">Jump Host <span class="text-muted">(opcional)</span></label>
+        <input type="text" id="jump-host" placeholder="bastion" />
+      </div>
+      <div class="form-group">
+        <label for="identity-file">Chave Privada <span class="text-muted">(opcional)</span></label>
+        <input type="text" id="identity-file" placeholder="~/.ssh/id_ed25519" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Options -->
+  <section class="section card">
+    <h2 class="section__title">Opções</h2>
+    <div class="options-grid">
+      <label class="toggle">
+        <input type="checkbox" id="opt-no-shell" checked />
+        <span class="toggle__track"></span>
+        <span>Sem shell (-N)</span>
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="opt-background" />
+        <span class="toggle__track"></span>
+        <span>Background (-f)</span>
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="opt-compression" />
+        <span class="toggle__track"></span>
+        <span>Compressão (-C)</span>
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="opt-exit-failure" checked />
+        <span class="toggle__track"></span>
+        <span>ExitOnForwardFailure</span>
+      </label>
+    </div>
+
+    <div class="form-grid" style="margin-top: 1rem;">
+      <div class="form-group">
+        <label for="alive-interval">ServerAliveInterval <span class="text-muted">(segundos)</span></label>
+        <input type="number" id="alive-interval" value="60" min="0" />
+      </div>
+      <div class="form-group">
+        <label for="alive-count">ServerAliveCountMax</label>
+        <input type="number" id="alive-count" value="3" min="0" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Diagram -->
+  <section class="section" id="diagram-section">
+    <h2 class="section__title">Como funciona</h2>
+    <div class="diagram card" id="tunnel-diagram">
+      <div class="diagram__flow">
+        <span class="diagram__node diagram__node--left" id="diag-left">localhost:8080</span>
+        <span class="diagram__arrow">&mdash;&mdash; SSH &mdash;&mdash;&gt;</span>
+        <span class="diagram__node diagram__node--middle" id="diag-middle">server</span>
+        <span class="diagram__arrow">&mdash;&mdash;&gt;</span>
+        <span class="diagram__node diagram__node--right" id="diag-right">localhost:8080</span>
+      </div>
+      <p class="diagram__desc" id="diag-desc"></p>
+    </div>
+  </section>
+
+  <!-- Output: SSH Command -->
+  <section class="section">
+    <h2 class="section__title">Comando SSH</h2>
+    <div class="code-preview-wrapper">
+      <button class="btn btn--sm copy-btn" data-copy="output-command">Copiar</button>
+      <div class="code-preview">
+        <code id="output-command">ssh -N -L 8080:localhost:8080 server</code>
+      </div>
+    </div>
+  </section>
+
+  <!-- Output: Autossh -->
+  <section class="section">
+    <h2 class="section__title">Persistente (autossh)</h2>
+    <div class="code-preview-wrapper">
+      <button class="btn btn--sm copy-btn" data-copy="output-autossh">Copiar</button>
+      <div class="code-preview">
+        <code id="output-autossh">autossh -M 0 -N -L 8080:localhost:8080 server</code>
+      </div>
+    </div>
+  </section>
+
+  <!-- Output: SSH Config -->
+  <section class="section">
+    <div class="config-header">
+      <h2 class="section__title">Equivalente ~/.ssh/config</h2>
+      <div class="form-group form-group--inline">
+        <label for="host-alias">Host alias:</label>
+        <input type="text" id="host-alias" value="my-tunnel" class="input--sm" />
+      </div>
+    </div>
+    <div class="code-preview-wrapper">
+      <button class="btn btn--sm copy-btn" data-copy="output-config">Copiar</button>
+      <div class="code-preview">
+        <code id="output-config"></code>
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+</Base>
+
+<style>
+  .page-header {
+    text-align: center;
+    padding: 2rem 0 1.5rem;
+  }
+
+  .page-header__title {
+    font-size: 1.75rem;
+    letter-spacing: -0.02em;
+  }
+
+  .page-header__tagline {
+    margin-top: 0.5rem;
+    color: var(--text-secondary);
+    font-style: italic;
+  }
+
+  .section__title {
+    font-size: 1rem;
+    color: var(--accent);
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Type Selector */
+  .type-selector {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .type-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all var(--transition);
+    font-family: var(--font-mono);
+  }
+
+  .type-btn:hover {
+    border-color: var(--accent);
+    box-shadow: var(--glow-sm);
+  }
+
+  .type-btn--active {
+    border-color: var(--accent);
+    background: var(--accent-glow);
+  }
+
+  .type-btn__flag {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .type-btn__label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+
+  /* Options Grid */
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  /* Diagram */
+  .diagram__flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 0.5rem 0;
+  }
+
+  .diagram__node {
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .diagram__node--left {
+    background: var(--accent-glow);
+    border: 1px solid var(--accent-dim);
+    color: var(--accent);
+  }
+
+  .diagram__node--middle {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+  }
+
+  .diagram__node--right {
+    background: var(--success-glow);
+    border: 1px solid var(--success);
+    color: var(--success);
+  }
+
+  .diagram__arrow {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
+
+  .diagram__desc {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.75rem;
+    line-height: 1.5;
+  }
+
+  /* Config header */
+  .config-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .config-header .section__title {
+    margin-bottom: 0;
+  }
+
+  .form-group--inline {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .input--sm {
+    width: 140px;
+    font-size: 0.875rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  @media (max-width: 640px) {
+    .type-selector {
+      flex-direction: column;
+    }
+
+    .options-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .diagram__flow {
+      flex-direction: column;
+    }
+
+    .config-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>
+
+<script>
+  import {
+    generateSshCommand,
+    generateAutosshCommand,
+    generateSshConfig,
+    generateDiagram,
+  } from '../lib/tunnel-generator';
+  import type {
+    TunnelConfig,
+    TunnelSpec,
+    TunnelOptions,
+    TunnelType,
+  } from '../lib/types';
+  import { copyToClipboard } from '../lib/clipboard';
+
+  let currentType: TunnelType = 'local';
+
+  // --- DOM refs ---
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+
+  const typeBtns = document.querySelectorAll<HTMLButtonElement>('.type-btn');
+  const fieldSections = document.querySelectorAll<HTMLElement>('.tunnel-fields');
+
+  // Outputs
+  const outputCommand = $<HTMLElement>('output-command');
+  const outputAutossh = $<HTMLElement>('output-autossh');
+  const outputConfig = $<HTMLElement>('output-config');
+
+  // Diagram
+  const diagLeft = $<HTMLElement>('diag-left');
+  const diagMiddle = $<HTMLElement>('diag-middle');
+  const diagRight = $<HTMLElement>('diag-right');
+  const diagDesc = $<HTMLElement>('diag-desc');
+
+  // --- Type switching ---
+  typeBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      currentType = btn.dataset.type as TunnelType;
+      typeBtns.forEach((b) => b.classList.remove('type-btn--active'));
+      btn.classList.add('type-btn--active');
+      fieldSections.forEach((s) => (s.hidden = true));
+      $<HTMLElement>(`fields-${currentType}`).hidden = false;
+      update();
+    });
+  });
+
+  // --- Build config from form ---
+  function getTunnelSpec(): TunnelSpec {
+    switch (currentType) {
+      case 'local':
+        return {
+          type: 'local',
+          localPort: Number(($<HTMLInputElement>('local-port')).value) || 8080,
+          remoteHost: ($<HTMLInputElement>('remote-host')).value || 'localhost',
+          remotePort: Number(($<HTMLInputElement>('remote-port')).value) || 8080,
+          bindAddress: ($<HTMLInputElement>('local-bind')).value || undefined,
+        };
+      case 'remote':
+        return {
+          type: 'remote',
+          remotePort: Number(($<HTMLInputElement>('r-remote-port')).value) || 8080,
+          localHost: ($<HTMLInputElement>('r-local-host')).value || 'localhost',
+          localPort: Number(($<HTMLInputElement>('r-local-port')).value) || 3000,
+          bindAddress: ($<HTMLInputElement>('r-bind')).value || undefined,
+        };
+      case 'dynamic':
+        return {
+          type: 'dynamic',
+          localPort: Number(($<HTMLInputElement>('d-local-port')).value) || 1080,
+          bindAddress: ($<HTMLInputElement>('d-bind')).value || undefined,
+        };
+    }
+  }
+
+  function getOptions(): TunnelOptions {
+    return {
+      sshServer: ($<HTMLInputElement>('ssh-server')).value || 'server',
+      sshUser: ($<HTMLInputElement>('ssh-user')).value || undefined,
+      sshPort: Number(($<HTMLInputElement>('ssh-port')).value) || 22,
+      jumpHost: ($<HTMLInputElement>('jump-host')).value || undefined,
+      identityFile: ($<HTMLInputElement>('identity-file')).value || undefined,
+      noShell: ($<HTMLInputElement>('opt-no-shell')).checked,
+      background: ($<HTMLInputElement>('opt-background')).checked,
+      compression: ($<HTMLInputElement>('opt-compression')).checked,
+      exitOnForwardFailure: ($<HTMLInputElement>('opt-exit-failure')).checked,
+      serverAliveInterval: Number(($<HTMLInputElement>('alive-interval')).value) || undefined,
+      serverAliveCountMax: Number(($<HTMLInputElement>('alive-count')).value) || undefined,
+    };
+  }
+
+  function getConfig(): TunnelConfig {
+    return {
+      tunnels: [getTunnelSpec()],
+      options: getOptions(),
+    };
+  }
+
+  // --- Update outputs ---
+  function update() {
+    const config = getConfig();
+    const alias = ($<HTMLInputElement>('host-alias')).value || 'my-tunnel';
+
+    outputCommand.textContent = generateSshCommand(config);
+    outputAutossh.textContent = generateAutosshCommand(config);
+    outputConfig.textContent = generateSshConfig(config, alias);
+
+    // Diagram
+    const tunnel = config.tunnels[0];
+    const diagram = generateDiagram(tunnel, config.options);
+    diagLeft.textContent = diagram.left;
+    diagMiddle.textContent = diagram.middle;
+    diagRight.textContent = diagram.right;
+    diagDesc.textContent = diagram.description;
+  }
+
+  // --- Listen to all inputs ---
+  document.querySelectorAll('input').forEach((input) => {
+    input.addEventListener('input', update);
+    input.addEventListener('change', update);
+  });
+
+  // --- Copy buttons ---
+  document.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const targetId = btn.dataset.copy;
+      if (!targetId) return;
+      const target = $(targetId);
+      if (!target) return;
+      const success = await copyToClipboard(target.textContent || '');
+      const original = btn.textContent;
+      btn.textContent = success ? 'Copiado!' : 'Erro';
+      setTimeout(() => (btn.textContent = original), 1500);
+    });
+  });
+
+  // Initial render
+  update();
+</script>

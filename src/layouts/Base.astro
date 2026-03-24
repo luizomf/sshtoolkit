@@ -1,0 +1,177 @@
+---
+interface Props {
+  title: string;
+  description: string;
+}
+const { title, description } = Astro.props;
+const canonicalUrl = Astro.url.href;
+const currentPath = Astro.url.pathname;
+
+const navItems = [
+  { href: '/', label: 'Home' },
+  { href: '/tunnels/', label: 'Tunnels' },
+  { href: '/hardening/', label: 'Hardening' },
+  { href: '/config/', label: 'Config' },
+  { href: '/keygen/', label: 'KeyGen' },
+];
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:site_name" content="SSH Toolkit" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
+    <!-- Extras -->
+    <meta name="robots" content="index, follow" />
+    <meta name="author" content="Otávio Miranda" />
+    <meta
+      name="keywords"
+      content="ssh, toolkit, tunnels, hardening, sshd_config, ssh config, gerador de chaves, ed25519, segurança"
+    />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+
+    <!-- Structured Data -->
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: 'SSH Toolkit',
+        description,
+        url: canonicalUrl,
+        applicationCategory: 'SecurityApplication',
+        operatingSystem: 'Any',
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+        author: {
+          '@type': 'Person',
+          name: 'Otávio Miranda',
+          url: 'https://www.otaviomiranda.com.br',
+        },
+      })}
+    />
+  </head>
+  <body>
+    <nav class="nav">
+      <div class="nav__inner">
+        <a href="/" class="nav__brand">
+          <span class="nav__logo">$_</span>
+          <span class="nav__name">SSH Toolkit</span>
+        </a>
+        <ul class="nav__links">
+          {navItems.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                class:list={['nav__link', { 'nav__link--active': currentPath === item.href || currentPath === item.href.slice(0, -1) }]}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </nav>
+    <main class="container">
+      <slot />
+    </main>
+  </body>
+</html>
+
+<style is:global>
+  @import '../styles/global.css';
+</style>
+
+<style>
+  .nav {
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-secondary);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav__inner {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .nav__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+  }
+
+  .nav__logo {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-shadow: 0 0 10px rgba(255, 176, 0, 0.4);
+  }
+
+  .nav__name {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .nav__links {
+    list-style: none;
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .nav__link {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    padding: 0.375rem 0.75rem;
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: all var(--transition);
+  }
+
+  .nav__link:hover {
+    color: var(--accent);
+    background: var(--accent-glow);
+    text-decoration: none;
+  }
+
+  .nav__link--active {
+    color: var(--accent);
+    background: var(--accent-glow);
+  }
+
+  @media (max-width: 640px) {
+    .nav__inner {
+      flex-direction: column;
+      padding: 0.75rem 1rem;
+    }
+
+    .nav__links {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+  }
+</style>

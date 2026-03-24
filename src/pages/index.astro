@@ -1,0 +1,182 @@
+---
+import Base from '../layouts/Base.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Base
+  title="SSH Toolkit — Tudo sobre SSH. Nada sai do seu navegador."
+  description="Gere chaves SSH, endureça servidores, configure clientes e monte comandos de túnel. 100% no navegador, zero rastreamento."
+>
+  <header class="hero">
+    <h1 class="hero__title">
+      <span class="hero__prompt">$_</span> SSH Toolkit
+    </h1>
+    <p class="hero__tagline">
+      Tudo sobre SSH. Nada sai do seu navegador.
+    </p>
+  </header>
+
+  <section class="tools">
+    <a href="/tunnels/" class="tool-card">
+      <span class="tool-card__icon">-L -R -D</span>
+      <h2 class="tool-card__title">Tunnels</h2>
+      <p class="tool-card__desc">
+        Monte comandos de SSH Tunnel com diagramas visuais.
+        Local, Remote e Dynamic (SOCKS) forwards.
+      </p>
+    </a>
+
+    <a href="/hardening/" class="tool-card tool-card--soon">
+      <span class="tool-card__icon">sshd</span>
+      <h2 class="tool-card__title">Server Hardening</h2>
+      <p class="tool-card__desc">
+        Gere um sshd_config endurecido com score de segurança e presets de boas práticas.
+      </p>
+      <span class="tool-card__badge">Em breve</span>
+    </a>
+
+    <a href="/config/" class="tool-card tool-card--soon">
+      <span class="tool-card__icon">~/.ssh</span>
+      <h2 class="tool-card__title">Client Config</h2>
+      <p class="tool-card__desc">
+        Monte seu ~/.ssh/config com ProxyJump, forwards e wildcard hosts.
+      </p>
+      <span class="tool-card__badge">Em breve</span>
+    </a>
+
+    <a href="/keygen/" class="tool-card tool-card--soon">
+      <span class="tool-card__icon">ed25519</span>
+      <h2 class="tool-card__title">Key Generator</h2>
+      <p class="tool-card__desc">
+        Gere pares de chaves Ed25519 e RSA direto no navegador via Web Crypto API.
+      </p>
+      <span class="tool-card__badge">Em breve</span>
+    </a>
+  </section>
+
+  <section class="privacy card">
+    <h2 class="privacy__title">Por que roda no navegador?</h2>
+    <p>
+      Chaves SSH e configs de servidor são dados sensíveis. Este toolkit roda
+      <strong>inteiramente no seu navegador</strong> — sem chamadas de API, sem
+      rastreamento, nenhum dado sai da sua máquina. Verifique você mesmo: abra
+      o DevTools, confira a aba Network. Zero requisições externas.
+    </p>
+  </section>
+
+  <Footer />
+</Base>
+
+<style>
+  .hero {
+    text-align: center;
+    padding: 3rem 0 2.5rem;
+  }
+
+  .hero__title {
+    font-size: 2rem;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+  }
+
+  .hero__prompt {
+    color: var(--accent);
+    text-shadow: 0 0 20px rgba(255, 176, 0, 0.4),
+      0 0 40px rgba(255, 176, 0, 0.15);
+  }
+
+  .hero__tagline {
+    margin-top: 0.75rem;
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    font-style: italic;
+  }
+
+  .tools {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .tool-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: all var(--transition);
+    position: relative;
+  }
+
+  .tool-card:hover {
+    border-color: var(--accent);
+    box-shadow: var(--glow-sm);
+    text-decoration: none;
+  }
+
+  .tool-card--soon {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .tool-card__icon {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: var(--font-mono);
+  }
+
+  .tool-card__title {
+    font-size: 1.125rem;
+    color: var(--text-primary);
+  }
+
+  .tool-card__desc {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .tool-card__badge {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .privacy {
+    margin-bottom: 2.5rem;
+  }
+
+  .privacy__title {
+    font-size: 1rem;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  .privacy p {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  @media (max-width: 640px) {
+    .tools {
+      grid-template-columns: 1fr;
+    }
+
+    .hero__title {
+      font-size: 1.5rem;
+    }
+  }
+</style>
