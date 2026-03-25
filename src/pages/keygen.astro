@@ -130,6 +130,42 @@ import Footer from '../components/Footer.astro';
         <code>~/.ssh/authorized_keys</code> no servidor.
       </p>
     </section>
+
+    <!-- Permissions -->
+    <section class="section card">
+      <h2 class="section__title">Permissões necessárias</h2>
+      <p class="text-secondary" style="font-size: 0.875rem; margin-bottom: 0.75rem;">
+        O SSH exige permissões restritas nos arquivos de chave. Sem isso, o cliente recusa usar a chave.
+      </p>
+      <div class="code-preview-wrapper">
+        <button class="btn btn--sm copy-btn" data-copy="output-permissions">Copiar</button>
+        <div class="code-preview">
+          <code id="output-permissions"></code>
+        </div>
+      </div>
+      <div class="permissions-table">
+        <div class="permissions-row">
+          <code>~/.ssh/</code>
+          <span class="permissions-value">700</span>
+          <span class="text-muted">drwx------</span>
+        </div>
+        <div class="permissions-row">
+          <code id="perm-privkey-name">~/.ssh/id_ed25519</code>
+          <span class="permissions-value">600</span>
+          <span class="text-muted">-rw-------</span>
+        </div>
+        <div class="permissions-row">
+          <code id="perm-pubkey-name">~/.ssh/id_ed25519.pub</code>
+          <span class="permissions-value">644</span>
+          <span class="text-muted">-rw-r--r--</span>
+        </div>
+        <div class="permissions-row">
+          <code>~/.ssh/authorized_keys</code>
+          <span class="permissions-value">600</span>
+          <span class="text-muted">-rw-------</span>
+        </div>
+      </div>
+    </section>
   </div>
 
   <Footer />
@@ -235,6 +271,31 @@ import Footer from '../components/Footer.astro';
     display: none !important;
   }
 
+  .permissions-table {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .permissions-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.85rem;
+    font-family: var(--font-mono);
+  }
+
+  .permissions-row code {
+    min-width: 14ch;
+  }
+
+  .permissions-value {
+    color: var(--accent);
+    font-weight: 700;
+    min-width: 3ch;
+  }
+
   @media (max-width: 640px) {
     .type-selector {
       flex-direction: column;
@@ -288,6 +349,12 @@ import Footer from '../components/Footer.astro';
       // Install command
       const filename = currentType === 'ed25519' ? 'id_ed25519' : 'id_rsa';
       $<HTMLElement>('output-install').textContent = `ssh-copy-id -i ~/.ssh/${filename}.pub usuario@servidor`;
+
+      // Permissions command
+      $<HTMLElement>('output-permissions').textContent =
+        `chmod 700 ~/.ssh && chmod 600 ~/.ssh/${filename} && chmod 644 ~/.ssh/${filename}.pub`;
+      $<HTMLElement>('perm-privkey-name').textContent = `~/.ssh/${filename}`;
+      $<HTMLElement>('perm-pubkey-name').textContent = `~/.ssh/${filename}.pub`;
 
       results.hidden = false;
     } catch (err) {
