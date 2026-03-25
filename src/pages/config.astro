@@ -16,6 +16,22 @@ import Footer from '../components/Footer.astro';
     </p>
   </header>
 
+  <!-- Use-case cards -->
+  <section class="section">
+    <div class="usecase-cards">
+      <button class="usecase-card" id="usecase-bastion">
+        <span class="usecase-card__icon">🏰</span>
+        <span class="usecase-card__title">Acessar via bastion host</span>
+        <span class="usecase-card__desc">Dois hosts com ProxyJump configurado</span>
+      </button>
+      <button class="usecase-card" id="usecase-multi-server">
+        <span class="usecase-card__icon">🖥</span>
+        <span class="usecase-card__title">Múltiplos servidores</span>
+        <span class="usecase-card__desc">Prod, staging e DB com mesma chave</span>
+      </button>
+    </div>
+  </section>
+
   <!-- Actions bar -->
   <section class="section actions-bar">
     <button class="btn btn--accent" id="btn-add-host">+ Adicionar Host</button>
@@ -563,6 +579,55 @@ import Footer from '../components/Footer.astro';
   $<HTMLButtonElement>('btn-download').addEventListener('click', () => {
     const content = outputConfig.textContent || '';
     if (content) downloadFile(content, 'config');
+  });
+
+  // --- Use-case: bastion host ---
+  $<HTMLButtonElement>('usecase-bastion').addEventListener('click', () => {
+    const bastion = createEmptyHost();
+    bastion.host = 'bastion';
+    bastion.hostName = 'bastion.exemplo.com';
+    bastion.user = 'deploy';
+    bastion.identityFile = '~/.ssh/id_ed25519';
+
+    const internal = createEmptyHost();
+    internal.host = 'db-server';
+    internal.hostName = '10.0.1.50';
+    internal.user = 'deploy';
+    internal.proxyJump = 'bastion';
+    internal.identityFile = '~/.ssh/id_ed25519';
+
+    hosts = [bastion, internal];
+    render();
+    // Open both cards
+    hostsContainer.querySelectorAll('.host-card').forEach((c) => c.classList.add('host-card--open'));
+  });
+
+  // --- Use-case: multi-server ---
+  $<HTMLButtonElement>('usecase-multi-server').addEventListener('click', () => {
+    const prod = createEmptyHost();
+    prod.host = 'prod';
+    prod.hostName = 'prod.exemplo.com';
+    prod.user = 'deploy';
+    prod.port = 22;
+    prod.identityFile = '~/.ssh/id_ed25519';
+
+    const staging = createEmptyHost();
+    staging.host = 'staging';
+    staging.hostName = 'staging.exemplo.com';
+    staging.user = 'deploy';
+    staging.port = 22;
+    staging.identityFile = '~/.ssh/id_ed25519';
+
+    const db = createEmptyHost();
+    db.host = 'db';
+    db.hostName = '10.0.1.50';
+    db.user = 'admin';
+    db.proxyJump = 'prod';
+    db.identityFile = '~/.ssh/id_ed25519';
+
+    hosts = [prod, staging, db];
+    render();
+    hostsContainer.querySelectorAll('.host-card').forEach((c) => c.classList.add('host-card--open'));
   });
 
   // Initial render

@@ -17,6 +17,31 @@ import Tooltip from '../components/Tooltip.astro';
     </p>
   </header>
 
+  <!-- Use-case cards -->
+  <section class="section">
+    <div class="usecase-cards">
+      <button class="usecase-card" data-usecase="remote-db">
+        <span class="usecase-card__icon">🗄</span>
+        <span class="usecase-card__title">Acessar banco remoto</span>
+        <span class="usecase-card__desc">PostgreSQL, MySQL via túnel local</span>
+      </button>
+      <button class="usecase-card" data-usecase="expose-local">
+        <span class="usecase-card__icon">🌐</span>
+        <span class="usecase-card__title">Expor servidor local</span>
+        <span class="usecase-card__desc">Compartilhe seu dev server</span>
+      </button>
+      <button class="usecase-card" data-usecase="socks-proxy">
+        <span class="usecase-card__icon">🔒</span>
+        <span class="usecase-card__title">Navegar via proxy</span>
+        <span class="usecase-card__desc">SOCKS proxy pela rede remota</span>
+      </button>
+    </div>
+    <div class="usecase-banner" id="usecase-banner" hidden>
+      <span id="usecase-banner-text"></span>
+      <button class="usecase-banner__close" id="usecase-banner-close" aria-label="Fechar">&times;</button>
+    </div>
+  </section>
+
   <!-- Tunnel Type Selector -->
   <section class="section">
     <div class="type-selector" id="type-selector">
@@ -534,6 +559,62 @@ import Tooltip from '../components/Tooltip.astro';
       btn.textContent = success ? 'Copiado!' : 'Erro';
       setTimeout(() => (btn.textContent = original), 1500);
     });
+  });
+
+  // --- Use-case cards ---
+  const usecaseBanner = $<HTMLElement>('usecase-banner');
+  const usecaseBannerText = $<HTMLElement>('usecase-banner-text');
+
+  const usecases: Record<string, { type: TunnelType; listenPort: number; destHost: string; destPort: number; server: string; user: string; alias: string; banner: string }> = {
+    'remote-db': {
+      type: 'local', listenPort: 5432, destHost: 'db.internal', destPort: 5432,
+      server: 'bastion.exemplo.com', user: 'deploy', alias: 'db-tunnel',
+      banner: 'Exemplo carregado — após conectar, use "psql -h localhost -p 5432" para acessar o banco remoto como se fosse local.',
+    },
+    'expose-local': {
+      type: 'remote', listenPort: 8080, destHost: 'localhost', destPort: 3000,
+      server: 'servidor.exemplo.com', user: 'deploy', alias: 'expose-dev',
+      banner: 'Exemplo carregado — seu colega poderá acessar seu app local em servidor.exemplo.com:8080.',
+    },
+    'socks-proxy': {
+      type: 'dynamic', listenPort: 1080, destHost: '', destPort: 0,
+      server: 'proxy.exemplo.com', user: 'usuario', alias: 'socks-proxy',
+      banner: 'Exemplo carregado — configure seu navegador para usar proxy SOCKS5 em localhost:1080.',
+    },
+  };
+
+  document.querySelectorAll<HTMLButtonElement>('.usecase-card').forEach((card) => {
+    card.addEventListener('click', () => {
+      const uc = usecases[card.dataset.usecase!];
+      if (!uc) return;
+
+      // Switch type (this resets fields and updates labels)
+      switchType(uc.type);
+      typeBtns.forEach((b) => {
+        b.classList.toggle('type-btn--active', b.dataset.type === uc.type);
+      });
+
+      // Fill fields
+      listenPort.value = String(uc.listenPort);
+      destHost.value = uc.destHost;
+      destPort.value = String(uc.destPort);
+      ($<HTMLInputElement>('ssh-server')).value = uc.server;
+      ($<HTMLInputElement>('ssh-user')).value = uc.user;
+      ($<HTMLInputElement>('host-alias')).value = uc.alias;
+
+      // Show banner
+      usecaseBannerText.textContent = uc.banner;
+      usecaseBanner.hidden = false;
+
+      update();
+
+      // Scroll to form
+      $<HTMLElement>('tunnel-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  $<HTMLElement>('usecase-banner-close').addEventListener('click', () => {
+    usecaseBanner.hidden = true;
   });
 
   // Initial render
