@@ -17,6 +17,17 @@ import Tooltip from '../components/Tooltip.astro';
     </p>
   </header>
 
+  <!-- Use-case card -->
+  <section class="section">
+    <div class="usecase-cards">
+      <button class="usecase-card" id="usecase-first-key">
+        <span class="usecase-card__icon">🔑</span>
+        <span class="usecase-card__title">Minha primeira chave SSH</span>
+        <span class="usecase-card__desc">Ed25519 com comentário pronto para usar</span>
+      </button>
+    </div>
+  </section>
+
   <!-- Browser warning -->
   <div class="warning-banner" id="crypto-warning" hidden>
     Seu navegador não suporta geração de chaves Ed25519.
@@ -379,6 +390,21 @@ import Tooltip from '../components/Tooltip.astro';
       btn.textContent = success ? 'Copiado!' : 'Erro';
       setTimeout(() => (btn.textContent = original), 1500);
     });
+  });
+
+  // Use-case: "My first SSH key"
+  $<HTMLButtonElement>('usecase-first-key').addEventListener('click', () => {
+    // Select Ed25519
+    currentType = 'ed25519';
+    typeBtns.forEach((b) => {
+      b.classList.toggle('type-btn--active', b.dataset.type === 'ed25519');
+    });
+
+    // Fill comment
+    ($<HTMLInputElement>('comment')).value = 'estudante@meu-laptop';
+
+    // Auto-generate
+    btnGenerate.click();
   });
 
   // Downloads

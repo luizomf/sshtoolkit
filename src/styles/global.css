@@ -392,8 +392,79 @@ label {
   }
 }
 
+/* === Use-case Cards === */
+.usecase-cards {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.usecase-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all var(--transition);
+  font-family: var(--font-mono);
+  text-align: center;
+}
+
+.usecase-card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--glow-sm);
+}
+
+.usecase-card__icon {
+  font-size: 1.25rem;
+}
+
+.usecase-card__title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.usecase-card__desc {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.usecase-banner {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--accent-glow);
+  border: 1px solid var(--accent-dim);
+  border-radius: var(--radius);
+  font-size: 0.8rem;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.usecase-banner[hidden] {
+  display: none;
+}
+
+.usecase-banner__close {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  line-height: 1;
+}
+
 /* === Responsive === */
 @media (max-width: 640px) {
   .container { padding: 0 1rem 1rem; }
   .form-grid { grid-template-columns: 1fr; }
+  .usecase-cards { flex-direction: column; }
 }
