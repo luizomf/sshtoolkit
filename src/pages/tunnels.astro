@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import Footer from '../components/Footer.astro';
+import Tooltip from '../components/Tooltip.astro';
 ---
 
 <Base
@@ -20,15 +21,15 @@ import Footer from '../components/Footer.astro';
   <section class="section">
     <div class="type-selector" id="type-selector">
       <button class="type-btn type-btn--active" data-type="local">
-        <span class="type-btn__flag">-L</span>
+        <span class="type-btn__flag">-L <Tooltip text="Encaminha uma porta da sua máquina para um destino remoto através do servidor SSH. Ex: acessar um banco de dados remoto como se fosse local." /></span>
         <span class="type-btn__label">Local Forward</span>
       </button>
       <button class="type-btn" data-type="remote">
-        <span class="type-btn__flag">-R</span>
+        <span class="type-btn__flag">-R <Tooltip text="Expõe uma porta no servidor SSH que redireciona de volta para a sua máquina. Ex: permitir que colegas acessem seu servidor de desenvolvimento." /></span>
         <span class="type-btn__label">Remote Forward</span>
       </button>
       <button class="type-btn" data-type="dynamic">
-        <span class="type-btn__flag">-D</span>
+        <span class="type-btn__flag">-D <Tooltip text="Cria um proxy SOCKS na sua máquina. Todo tráfego configurado para usar o proxy passa pelo servidor SSH. Útil para navegar como se estivesse na rede remota." /></span>
         <span class="type-btn__label">Dynamic (SOCKS)</span>
       </button>
     </div>
@@ -43,7 +44,7 @@ import Footer from '../components/Footer.astro';
         <input type="number" id="listen-port" value="8080" min="1" max="65535" />
       </div>
       <div class="form-group">
-        <label for="bind-addr">Bind Address <span class="text-muted">(opcional)</span></label>
+        <label for="bind-addr">Bind Address <span class="text-muted">(opcional)</span> <Tooltip text="Em qual interface escutar. 'localhost' (padrão) = só local. '0.0.0.0' = todas as interfaces (use com cautela — expõe a porta na rede)." /></label>
         <input type="text" id="bind-addr" placeholder="localhost" />
       </div>
       <div class="form-group" id="group-dest-host">
@@ -74,7 +75,7 @@ import Footer from '../components/Footer.astro';
         <input type="number" id="ssh-port" value="22" min="1" max="65535" />
       </div>
       <div class="form-group">
-        <label for="jump-host">Jump Host <span class="text-muted">(opcional)</span></label>
+        <label for="jump-host">Jump Host <span class="text-muted">(opcional)</span> <Tooltip text="Servidor intermediário para chegar ao destino (ProxyJump). Útil quando o servidor SSH não é acessível diretamente pela internet." /></label>
         <input type="text" id="jump-host" placeholder="bastion" />
       </div>
       <div class="form-group">
@@ -91,12 +92,12 @@ import Footer from '../components/Footer.astro';
       <label class="toggle">
         <input type="checkbox" id="opt-no-shell" checked />
         <span class="toggle__track"></span>
-        <span>Sem shell (-N)</span>
+        <span>Sem shell (-N) <Tooltip text="Não abre um shell remoto. Use quando só precisa do túnel, sem executar comandos no servidor." /></span>
       </label>
       <label class="toggle">
         <input type="checkbox" id="opt-background" />
         <span class="toggle__track"></span>
-        <span>Background (-f)</span>
+        <span>Background (-f) <Tooltip text="Envia o SSH para segundo plano após autenticação. Combine com -N para túneis que rodam como daemon." /></span>
       </label>
       <label class="toggle">
         <input type="checkbox" id="opt-compression" />
@@ -106,13 +107,13 @@ import Footer from '../components/Footer.astro';
       <label class="toggle">
         <input type="checkbox" id="opt-exit-failure" checked />
         <span class="toggle__track"></span>
-        <span>ExitOnForwardFailure</span>
+        <span>ExitOnForwardFailure <Tooltip text="Aborta se a porta do túnel não puder ser reservada. Previne falhas silenciosas onde o SSH conecta mas o túnel não funciona." /></span>
       </label>
     </div>
 
     <div class="form-grid" style="margin-top: 1rem;">
       <div class="form-group">
-        <label for="alive-interval">ServerAliveInterval <span class="text-muted">(segundos)</span></label>
+        <label for="alive-interval">ServerAliveInterval <span class="text-muted">(s)</span> <Tooltip text="Segundos entre pings de keepalive. Evita que firewalls e NATs derrubem conexões ociosas." /></label>
         <input type="number" id="alive-interval" value="60" min="0" />
       </div>
       <div class="form-group">
