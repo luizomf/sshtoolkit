@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="45%" r="60%">
+      <stop offset="0%" stop-color="rgba(255,176,0,0.12)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    </radialGradient>
+    <filter id="textGlow">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="subtleGlow">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Scanline pattern -->
+    <pattern id="scanlines" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="2" fill="rgba(0,0,0,0.08)"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0a0e14"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <rect width="1200" height="630" fill="url(#scanlines)"/>
+
+  <!-- Border -->
+  <rect x="24" y="24" width="1152" height="582" rx="12" fill="none" stroke="#1e2d3d" stroke-width="1.5"/>
+
+  <!-- Terminal prompt icon -->
+  <text x="600" y="220" text-anchor="middle" font-family="'JetBrains Mono', 'Fira Code', monospace" font-size="96" font-weight="700" fill="#ffb000" filter="url(#textGlow)">$_</text>
+
+  <!-- Title -->
+  <text x="600" y="320" text-anchor="middle" font-family="'JetBrains Mono', 'Fira Code', monospace" font-size="64" font-weight="700" fill="#e0e0e0" filter="url(#subtleGlow)">SSH Toolkit</text>
+
+  <!-- Tagline -->
+  <text x="600" y="380" text-anchor="middle" font-family="'JetBrains Mono', 'Fira Code', monospace" font-size="22" fill="#8899aa" font-style="italic">Everything SSH. Nothing leaves your browser.</text>
+
+  <!-- Tool labels -->
+  <g font-family="'JetBrains Mono', 'Fira Code', monospace" font-size="16" fill="#ffb000">
+    <rect x="222" y="430" width="140" height="36" rx="6" fill="rgba(255,176,0,0.12)" stroke="#ffb000" stroke-width="1"/>
+    <text x="292" y="453" text-anchor="middle">Tunnels</text>
+
+    <rect x="392" y="430" width="140" height="36" rx="6" fill="rgba(255,176,0,0.12)" stroke="#ffb000" stroke-width="1"/>
+    <text x="462" y="453" text-anchor="middle">Hardening</text>
+
+    <rect x="562" y="430" width="140" height="36" rx="6" fill="rgba(255,176,0,0.12)" stroke="#ffb000" stroke-width="1"/>
+    <text x="632" y="453" text-anchor="middle">Config</text>
+
+    <rect x="732" y="430" width="140" height="36" rx="6" fill="rgba(255,176,0,0.12)" stroke="#ffb000" stroke-width="1"/>
+    <text x="802" y="453" text-anchor="middle">KeyGen</text>
+  </g>
+
+  <!-- Privacy badge -->
+  <text x="600" y="540" text-anchor="middle" font-family="'JetBrains Mono', 'Fira Code', monospace" font-size="14" fill="#556677">100% client-side · zero tracking · open source</text>
+
+  <!-- Author -->
+  <text x="600" y="572" text-anchor="middle" font-family="'JetBrains Mono', 'Fira Code', monospace" font-size="13" fill="#556677">by Otávio Miranda</text>
+</svg>
