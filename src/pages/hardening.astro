@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import Footer from '../components/Footer.astro';
+import Tooltip from '../components/Tooltip.astro';
 ---
 
 <Base
@@ -64,7 +65,7 @@ import Footer from '../components/Footer.astro';
         <input type="number" id="port" value="22" min="1" max="65535" />
       </div>
       <div class="form-group">
-        <label for="permit-root-login">PermitRootLogin</label>
+        <label for="permit-root-login">PermitRootLogin <Tooltip text="Controla se root pode logar via SSH. 'no' é mais seguro. 'prohibit-password' permite root apenas com chave." /></label>
         <select id="permit-root-login">
           <option value="no" selected>no</option>
           <option value="prohibit-password">prohibit-password</option>
@@ -83,15 +84,15 @@ import Footer from '../components/Footer.astro';
         <label class="toggle">
           <input type="checkbox" id="password-auth" />
           <span class="toggle__track"></span>
-          <span>PasswordAuthentication</span>
+          <span>PasswordAuthentication <Tooltip text="Desabilitar força login apenas por chave, que é imune a ataques de força bruta por senha." /></span>
         </label>
       </div>
       <div class="form-group">
-        <label for="auth-methods">AuthenticationMethods</label>
+        <label for="auth-methods">AuthenticationMethods <Tooltip text="Lista separada por vírgula. Use 'publickey' sozinho, ou 'publickey,keyboard-interactive' para 2FA (requer configuração de PAM)." /></label>
         <input type="text" id="auth-methods" value="publickey" placeholder="publickey" />
       </div>
       <div class="form-group">
-        <label for="max-auth-tries">MaxAuthTries</label>
+        <label for="max-auth-tries">MaxAuthTries <Tooltip text="Tentativas de autenticação por conexão. Valores baixos dificultam ataques de força bruta." /></label>
         <input type="number" id="max-auth-tries" value="3" min="1" max="20" />
       </div>
       <div class="form-group">
@@ -109,7 +110,7 @@ import Footer from '../components/Footer.astro';
         <label class="toggle">
           <input type="checkbox" id="use-pam" checked />
           <span class="toggle__track"></span>
-          <span>UsePAM</span>
+          <span>UsePAM <Tooltip text="Pluggable Authentication Modules. Necessário para autenticação por senha e 2FA. Seguro manter ativado mesmo com login apenas por chave." /></span>
         </label>
       </div>
     </div>
@@ -120,7 +121,7 @@ import Footer from '../components/Footer.astro';
     <h2 class="section__title">Controle de Acesso</h2>
     <div class="form-grid">
       <div class="form-group">
-        <label for="allow-users">AllowUsers <span class="text-muted">(espaço entre nomes)</span></label>
+        <label for="allow-users">AllowUsers <span class="text-muted">(espaço entre nomes)</span> <Tooltip text="Apenas estes usuários podem logar. Sobrepõe outros controles de acesso. Deixe vazio para permitir todos." /></label>
         <input type="text" id="allow-users" placeholder="deploy admin" />
       </div>
       <div class="form-group">
@@ -180,7 +181,7 @@ import Footer from '../components/Footer.astro';
         <label class="toggle">
           <input type="checkbox" id="x11-forwarding" />
           <span class="toggle__track"></span>
-          <span>X11Forwarding</span>
+          <span>X11Forwarding <Tooltip text="Permite aplicações gráficas via SSH. Desabilite se não precisar — reduz a superfície de ataque." /></span>
         </label>
       </div>
       <div class="form-group">
@@ -194,7 +195,7 @@ import Footer from '../components/Footer.astro';
         <label class="toggle">
           <input type="checkbox" id="tcp-forwarding" />
           <span class="toggle__track"></span>
-          <span>AllowTcpForwarding</span>
+          <span>AllowTcpForwarding <Tooltip text="Permite encaminhamento de portas pelo servidor. Desabilite se os usuários não precisam de túneis SSH." /></span>
         </label>
       </div>
       <div class="form-group">
@@ -245,11 +246,11 @@ import Footer from '../components/Footer.astro';
         <input type="number" id="max-sessions" value="5" min="1" />
       </div>
       <div class="form-group">
-        <label for="max-startups">MaxStartups</label>
+        <label for="max-startups">MaxStartups <Tooltip text="Formato: início:taxa:máximo. Após 'início' conexões não autenticadas, começa a rejeitar 'taxa'% aleatoriamente, limite em 'máximo'. Protege contra DDoS." /></label>
         <input type="text" id="max-startups" value="10:30:60" />
       </div>
       <div class="form-group">
-        <label for="log-level">LogLevel</label>
+        <label for="log-level">LogLevel <Tooltip text="VERBOSE é recomendado para auditoria. DEBUG é verboso mas útil para troubleshooting." /></label>
         <select id="log-level">
           <option value="QUIET">QUIET</option>
           <option value="FATAL">FATAL</option>

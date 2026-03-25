@@ -1,6 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import Footer from '../components/Footer.astro';
+import Tooltip from '../components/Tooltip.astro';
 ---
 
 <Base
@@ -27,15 +28,15 @@ import Footer from '../components/Footer.astro';
     <div class="type-selector">
       <button class="type-btn type-btn--active" data-type="ed25519">
         <span class="type-btn__flag">Ed25519</span>
-        <span class="type-btn__label">Recomendado</span>
+        <span class="type-btn__label">Recomendado <Tooltip text="Algoritmo moderno de curva elíptica. Chaves menores, mais rápido e mais seguro. Recomendado a menos que precise de compatibilidade com sistemas antigos." /></span>
       </button>
       <button class="type-btn" data-type="rsa-2048">
         <span class="type-btn__flag">RSA 2048</span>
-        <span class="type-btn__label">Compatibilidade</span>
+        <span class="type-btn__label">Compatibilidade <Tooltip text="Amplamente compatível, mas chaves maiores. Segurança aceitável para a maioria dos usos. Escolha se o servidor não suporta Ed25519." /></span>
       </button>
       <button class="type-btn" data-type="rsa-4096">
         <span class="type-btn__flag">RSA 4096</span>
-        <span class="type-btn__label">Máxima segurança</span>
+        <span class="type-btn__label">Máxima segurança <Tooltip text="Tamanho máximo de chave RSA. Operações mais lentas. Prefira Ed25519 a menos que precise de RSA especificamente." /></span>
       </button>
     </div>
   </section>
@@ -44,7 +45,7 @@ import Footer from '../components/Footer.astro';
   <section class="section card">
     <div class="form-grid">
       <div class="form-group">
-        <label for="comment">Comentário <span class="text-muted">(opcional)</span></label>
+        <label for="comment">Comentário <span class="text-muted">(opcional)</span> <Tooltip text="Adicionado ao final da chave pública para identificação. Convenção: usuario@maquina. Não afeta a segurança." /></label>
         <input type="text" id="comment" placeholder="usuario@maquina" />
       </div>
     </div>
@@ -65,7 +66,7 @@ import Footer from '../components/Footer.astro';
 
     <!-- Fingerprint -->
     <section class="section">
-      <h2 class="section__title">Fingerprint</h2>
+      <h2 class="section__title">Fingerprint <Tooltip text="Hash curto (SHA256) que identifica a chave. Use para verificar se a chave pública no servidor é a mesma que você gerou, sem comparar o conteúdo inteiro." /></h2>
       <div class="code-preview-wrapper">
         <button class="btn btn--sm copy-btn" data-copy="output-fingerprint">Copiar</button>
         <div class="code-preview">

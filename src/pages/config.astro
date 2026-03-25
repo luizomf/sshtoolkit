@@ -292,6 +292,10 @@ import Footer from '../components/Footer.astro';
   import { downloadFile } from '../lib/download';
   import type { SshHostEntry } from '../lib/types';
 
+  function tip(text: string): string {
+    return `<span class="tooltip"><span class="tooltip__trigger" role="button" tabindex="0" aria-expanded="false" aria-label="Help">?</span><span class="tooltip__content" role="tooltip">${text}</span></span>`;
+  }
+
   let hosts: SshHostEntry[] = [];
 
   const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -342,7 +346,7 @@ import Footer from '../components/Footer.astro';
       <div class="host-card__body">
         <div class="form-grid">
           <div class="form-group">
-            <label>Host (alias)</label>
+            <label>Host (alias) ${tip('Alias usado em "ssh &lt;alias&gt;". Pode incluir wildcards como "prod-*" para aplicar configurações a múltiplos hosts.')}</label>
             <input type="text" data-field="host" value="${esc(entry.host)}" placeholder="prod-server" />
           </div>
           <div class="form-group">
@@ -358,18 +362,18 @@ import Footer from '../components/Footer.astro';
             <input type="number" data-field="port" value="${entry.port || 22}" min="1" max="65535" />
           </div>
           <div class="form-group">
-            <label>IdentityFile</label>
+            <label>IdentityFile ${tip('Caminho da chave privada para este host. Padrão: ~/.ssh/id_ed25519 ou ~/.ssh/id_rsa.')}</label>
             <input type="text" data-field="identityFile" value="${esc(entry.identityFile)}" placeholder="~/.ssh/id_ed25519" />
           </div>
           <div class="form-group">
-            <label>ProxyJump</label>
+            <label>ProxyJump ${tip('Conecta através de um servidor intermediário (bastion/jump host). Equivalente à flag -J. Útil quando o destino não é acessível diretamente.')}</label>
             <input type="text" data-field="proxyJump" value="${esc(entry.proxyJump)}" placeholder="bastion" />
           </div>
         </div>
         <button class="advanced-toggle" data-toggle="${entry.id}">+ Opções avançadas</button>
         <div class="advanced-fields form-grid" hidden data-advanced="${entry.id}">
           <div class="form-group">
-            <label>ForwardAgent</label>
+            <label>ForwardAgent ${tip('Encaminha seu agente SSH local para o servidor remoto. Conveniente para multi-hop, mas tem implicações de segurança em servidores não confiáveis.')}</label>
             <select data-field="forwardAgent">
               <option value=""${entry.forwardAgent === undefined ? ' selected' : ''}>—</option>
               <option value="yes"${entry.forwardAgent === true ? ' selected' : ''}>yes</option>
@@ -394,7 +398,7 @@ import Footer from '../components/Footer.astro';
             <input type="number" data-field="serverAliveCountMax" value="${entry.serverAliveCountMax || ''}" min="0" placeholder="3" />
           </div>
           <div class="form-group form-group--full">
-            <label>LocalForward <span class="text-muted">(um por linha: porta host:porta)</span></label>
+            <label>LocalForward <span class="text-muted">(um por linha: porta host:porta)</span> ${tip('Encaminha portas locais através desta conexão. Formato: portaLocal hostRemoto:portaRemota.')}</label>
             <textarea data-field="localForward" rows="2" placeholder="5432 localhost:5432">${(entry.localForward || []).join('\n')}</textarea>
           </div>
           <div class="form-group form-group--full">

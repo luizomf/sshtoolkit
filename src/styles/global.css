@@ -318,6 +318,80 @@ label {
   background: var(--text-muted);
 }
 
+/* === Tooltip === */
+.tooltip {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: 0.35rem;
+}
+
+.tooltip__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition);
+  padding: 0;
+  line-height: 1;
+}
+
+.tooltip__trigger:hover,
+.tooltip__trigger:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
+  outline: none;
+}
+
+.tooltip__content {
+  display: none;
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 150;
+  background: var(--bg-secondary);
+  border: 1px solid var(--accent-dim);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  min-width: 220px;
+  max-width: 300px;
+  box-shadow: var(--glow-sm);
+  white-space: normal;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.tooltip--open .tooltip__content {
+  display: block;
+}
+
+@media (max-width: 640px) {
+  .tooltip__content {
+    position: fixed;
+    top: auto;
+    bottom: 1rem;
+    left: 1rem;
+    right: 1rem;
+    transform: none;
+    max-width: none;
+    min-width: 0;
+  }
+}
+
 /* === Responsive === */
 @media (max-width: 640px) {
   .container { padding: 0 1rem 1rem; }
