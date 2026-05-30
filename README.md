@@ -87,10 +87,10 @@ Import behavior:
 
 ## ProxyJump Workflow
 
-The current Client Config workflow includes a video-ready ProxyJump recipe and
+The current Client Config workflow includes a practical ProxyJump recipe and
 preview helpers for bastion/private-host setups.
 
-Click the `Receita ProxyJump para vídeo` card on `/config` to load:
+Click the `Receita ProxyJump prática` card on `/config` to load:
 
 ```sshconfig
 Host bastion
@@ -251,7 +251,7 @@ npm run dev -- --host 127.0.0.1 --port 4321
 
 Open `http://127.0.0.1:4321/config/` and verify:
 
-- Clicking `Receita ProxyJump para vídeo` creates `bastion` and `prod-db`.
+- Clicking `Receita ProxyJump prática` creates `bastion` and `prod-db`.
 - The generated config matches the recipe shown in this README.
 - The visual route is `Você -> bastion -> prod-db`.
 - The `ssh`, `scp`, and `rsync` previews match the commands shown above.
