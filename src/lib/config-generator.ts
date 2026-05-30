@@ -18,10 +18,30 @@ export function generateHostBlock(entry: SshHostEntry): string {
     addLine(lines, 'Port', entry.port);
   }
   addLine(lines, 'IdentityFile', entry.identityFile);
+  addLine(lines, 'IdentitiesOnly', entry.identitiesOnly);
+  addLine(lines, 'AddKeysToAgent', entry.addKeysToAgent);
   addLine(lines, 'ProxyJump', entry.proxyJump);
 
   if (entry.forwardAgent !== undefined) {
     addLine(lines, 'ForwardAgent', entry.forwardAgent);
+  }
+
+  addLine(lines, 'HostKeyAlias', entry.hostKeyAlias);
+  addLine(lines, 'StrictHostKeyChecking', entry.strictHostKeyChecking);
+  addLine(lines, 'UserKnownHostsFile', entry.userKnownHostsFile);
+  addLine(lines, 'LogLevel', entry.logLevel);
+  addLine(lines, 'IgnoreUnknown', entry.ignoreUnknown);
+
+  if (entry.sendEnv) {
+    for (const value of entry.sendEnv) {
+      addLine(lines, 'SendEnv', value);
+    }
+  }
+
+  if (entry.setEnv) {
+    for (const value of entry.setEnv) {
+      addLine(lines, 'SetEnv', value);
+    }
   }
 
   if (entry.localForward) {

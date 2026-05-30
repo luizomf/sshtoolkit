@@ -4,7 +4,9 @@ const KNOWN_KEYS = new Set([
   'hostname', 'user', 'port', 'identityfile', 'proxyjump',
   'forwardagent', 'localforward', 'remoteforward', 'dynamicforward',
   'serveraliveinterval', 'serveralivecountmax', 'requesttty',
-  'remotecommand', 'exitonforwardfailure',
+  'remotecommand', 'exitonforwardfailure', 'identitiesonly',
+  'addkeystoagent', 'loglevel', 'ignoreunknown', 'sendenv', 'setenv',
+  'stricthostkeychecking', 'userknownhostsfile', 'hostkeyalias',
 ]);
 
 function parseBool(value: string): boolean {
@@ -55,11 +57,40 @@ export function parseConfig(raw: string): SshHostEntry[] {
       case 'identityfile':
         current.identityFile = value;
         break;
+      case 'identitiesonly':
+        current.identitiesOnly = value as SshHostEntry['identitiesOnly'];
+        break;
+      case 'addkeystoagent':
+        current.addKeysToAgent = value;
+        break;
       case 'proxyjump':
         current.proxyJump = value;
         break;
       case 'forwardagent':
         current.forwardAgent = parseBool(value);
+        break;
+      case 'hostkeyalias':
+        current.hostKeyAlias = value;
+        break;
+      case 'stricthostkeychecking':
+        current.strictHostKeyChecking = value;
+        break;
+      case 'userknownhostsfile':
+        current.userKnownHostsFile = value;
+        break;
+      case 'loglevel':
+        current.logLevel = value;
+        break;
+      case 'ignoreunknown':
+        current.ignoreUnknown = value;
+        break;
+      case 'sendenv':
+        current.sendEnv = current.sendEnv || [];
+        current.sendEnv.push(value);
+        break;
+      case 'setenv':
+        current.setEnv = current.setEnv || [];
+        current.setEnv.push(value);
         break;
       case 'localforward':
         current.localForward = current.localForward || [];
