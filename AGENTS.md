@@ -66,6 +66,23 @@ Since we are using only `git` for context, we have to be explicit, precise and
 concise about every change in this repository. Always describe what matters for
 the project in the commits, issues and PRs.
 
+## Agent skills
+
+### Issue tracker
+
+Issues and PRDs live in GitHub Issues for `luizomf/sshtoolkit`. See
+`docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Use the default omskills triage labels and category labels. See
+`docs/agents/triage-labels.md`.
+
+### Domain docs
+
+This is a single-context repo; read root `CONTEXT.md` and `docs/adr/` when
+present. See `docs/agents/domain.md`.
+
 ### Commit style
 
 ```
