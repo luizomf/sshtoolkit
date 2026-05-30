@@ -53,15 +53,15 @@ import Tooltip from '../components/Tooltip.astro';
     <h2 class="section__title">Conexão SSH</h2>
     <div class="form-grid">
       <div class="form-group">
-        <label for="ssh-server">Servidor SSH</label>
+        <label for="ssh-server">Servidor SSH <Tooltip text="Servidor que receberá a conexão SSH e carregará os túneis. Pode ser domínio, IP ou alias resolvido pelo seu ambiente." /></label>
         <input type="text" id="ssh-server" placeholder="seu-servidor.com" />
       </div>
       <div class="form-group">
-        <label for="ssh-user">Usuário <span class="text-muted">(opcional)</span></label>
+        <label for="ssh-user">Usuário <span class="text-muted">(opcional)</span> <Tooltip text="Usuário SSH usado para conectar no servidor. Se vazio, o SSH usa o usuário padrão do seu sistema ou do ~/.ssh/config." /></label>
         <input type="text" id="ssh-user" placeholder="deploy" />
       </div>
       <div class="form-group">
-        <label for="ssh-port">Porta <span class="text-muted">(padrão: 22)</span></label>
+        <label for="ssh-port">Porta <span class="text-muted">(padrão: 22)</span> <Tooltip text="Porta onde o sshd escuta no servidor. Mantenha 22 se não houver configuração personalizada." /></label>
         <input type="number" id="ssh-port" value="22" min="1" max="65535" />
       </div>
       <div class="form-group">
@@ -69,7 +69,7 @@ import Tooltip from '../components/Tooltip.astro';
         <input type="text" id="jump-host" placeholder="bastion" />
       </div>
       <div class="form-group">
-        <label for="identity-file">Chave Privada <span class="text-muted">(opcional)</span></label>
+        <label for="identity-file">Chave Privada <span class="text-muted">(opcional)</span> <Tooltip text="Caminho da chave privada passada com -i. Use quando esta conexão precisa de uma chave específica." /></label>
         <input type="text" id="identity-file" placeholder="~/.ssh/id_ed25519" />
       </div>
     </div>
@@ -92,7 +92,7 @@ import Tooltip from '../components/Tooltip.astro';
       <label class="toggle">
         <input type="checkbox" id="opt-compression" />
         <span class="toggle__track"></span>
-        <span>Compressão (-C)</span>
+        <span>Compressão (-C) <Tooltip text="Comprime dados no túnel. Pode ajudar em links lentos, mas costuma ser desnecessário para tráfego já comprimido." /></span>
       </label>
       <label class="toggle">
         <input type="checkbox" id="opt-exit-failure" checked />
@@ -107,7 +107,7 @@ import Tooltip from '../components/Tooltip.astro';
         <input type="number" id="alive-interval" value="60" min="0" />
       </div>
       <div class="form-group">
-        <label for="alive-count">ServerAliveCountMax</label>
+        <label for="alive-count">ServerAliveCountMax <Tooltip text="Quantidade de keepalives sem resposta antes do cliente encerrar a conexão. Junto com ServerAliveInterval define o timeout." /></label>
         <input type="number" id="alive-count" value="3" min="0" />
       </div>
     </div>
@@ -146,7 +146,7 @@ import Tooltip from '../components/Tooltip.astro';
     <div class="config-header">
       <h2 class="section__title">Equivalente ~/.ssh/config</h2>
       <div class="form-group form-group--inline">
-        <label for="host-alias">Host alias:</label>
+        <label for="host-alias">Host alias: <Tooltip text="Nome do bloco Host gerado para o ~/.ssh/config. Depois você pode conectar usando ssh este-alias." /></label>
         <input type="text" id="host-alias" value="my-tunnel" class="input--sm" />
       </div>
     </div>
@@ -372,6 +372,10 @@ import Tooltip from '../components/Tooltip.astro';
   } from '../lib/types';
   import { copyToClipboard } from '../lib/clipboard';
 
+  function tip(text: string): string {
+    return `<span class="tooltip"><span class="tooltip__trigger" role="button" tabindex="0" aria-expanded="false" aria-label="Help">?</span><span class="tooltip__content" role="tooltip">${text}</span></span>`;
+  }
+
   // --- State ---
   interface TunnelEntry {
     id: number;
@@ -400,10 +404,38 @@ import Tooltip from '../components/Tooltip.astro';
     dynamic: { listenPort: 1080, destHost: '', destPort: 0 },
   };
 
-  const typeLabels: Record<TunnelType, { listen: string; dest: string; destPort: string }> = {
-    local: { listen: 'Porta local', dest: 'Host remoto', destPort: 'Porta remota' },
-    remote: { listen: 'Porta remota', dest: 'Host local', destPort: 'Porta local' },
-    dynamic: { listen: 'Porta SOCKS', dest: '', destPort: '' },
+  const typeLabels: Record<TunnelType, {
+    listen: string;
+    listenTip: string;
+    dest: string;
+    destTip: string;
+    destPort: string;
+    destPortTip: string;
+  }> = {
+    local: {
+      listen: 'Porta local',
+      listenTip: 'Porta aberta na sua máquina. Você conecta em localhost:porta e o tráfego atravessa o SSH.',
+      dest: 'Host remoto',
+      destTip: 'Destino visto a partir do servidor SSH. Use localhost quando o serviço roda no próprio servidor.',
+      destPort: 'Porta remota',
+      destPortTip: 'Porta do serviço remoto que você quer acessar através do túnel local.',
+    },
+    remote: {
+      listen: 'Porta remota',
+      listenTip: 'Porta aberta no servidor SSH. Acessos nessa porta voltam pelo túnel para sua máquina.',
+      dest: 'Host local',
+      destTip: 'Destino visto a partir da sua máquina. Normalmente localhost para um serviço rodando localmente.',
+      destPort: 'Porta local',
+      destPortTip: 'Porta do serviço local que será exposto através do túnel remoto.',
+    },
+    dynamic: {
+      listen: 'Porta SOCKS',
+      listenTip: 'Porta local do proxy SOCKS. Configure navegador ou ferramenta para usar localhost nesta porta.',
+      dest: '',
+      destTip: '',
+      destPort: '',
+      destPortTip: '',
+    },
   };
 
   // --- Create entry ---
@@ -439,19 +471,19 @@ import Tooltip from '../components/Tooltip.astro';
       </div>
       <div class="form-grid">
         <div class="form-group">
-          <label>${labels.listen}</label>
+          <label>${labels.listen} ${tip(labels.listenTip)}</label>
           <input type="number" data-field="listenPort" value="${entry.listenPort}" min="1" max="65535" />
         </div>
         <div class="form-group">
-          <label>Bind Address <span class="text-muted">(opcional)</span></label>
+          <label>Bind Address <span class="text-muted">(opcional)</span> ${tip('Endereço onde a porta do túnel escuta. Vazio usa o padrão do SSH; 0.0.0.0 pode expor a porta para a rede.')}</label>
           <input type="text" data-field="bindAddr" value="${entry.bindAddr}" placeholder="localhost" />
         </div>
         <div class="form-group" ${showDest ? '' : 'hidden'}>
-          <label>${labels.dest}</label>
+          <label>${labels.dest} ${tip(labels.destTip)}</label>
           <input type="text" data-field="destHost" value="${entry.destHost}" />
         </div>
         <div class="form-group" ${showDest ? '' : 'hidden'}>
-          <label>${labels.destPort}</label>
+          <label>${labels.destPort} ${tip(labels.destPortTip)}</label>
           <input type="number" data-field="destPort" value="${entry.destPort}" min="1" max="65535" />
         </div>
       </div>

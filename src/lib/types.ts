@@ -52,8 +52,17 @@ export interface SshHostEntry {
   user?: string;
   port?: number;
   identityFile?: string;
+  identitiesOnly?: 'yes' | 'no';
+  addKeysToAgent?: string;
   proxyJump?: string;
   forwardAgent?: boolean;
+  hostKeyAlias?: string;
+  strictHostKeyChecking?: string;
+  userKnownHostsFile?: string;
+  logLevel?: string;
+  ignoreUnknown?: string;
+  sendEnv?: string[];
+  setEnv?: string[];
   localForward?: string[];
   remoteForward?: string[];
   dynamicForward?: string[];

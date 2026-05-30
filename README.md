@@ -1,111 +1,329 @@
 # SSH Toolkit
 
-Toolkit SSH completo no navegador: gere chaves, endureça servidores, configure
-clientes e monte túneis. 100% client-side, zero tracking.
+Browser-based SSH toolkit for developers, students, and sysadmins. It generates
+SSH keys, hardened `sshd_config` files, client-side `~/.ssh/config` entries, and
+SSH tunnel commands.
 
-**https://sshtoolkit.otaviomiranda.com.br**
+Everything runs in the browser. There is no backend, no database, no cookies,
+no analytics, and no tracking. Sensitive SSH data should never leave the user's
+machine.
 
----
+Live site: **https://sshtoolkit.otaviomiranda.com.br**
 
-## Ferramentas
+## Tools
 
-| Ferramenta | Rota | Descricao |
-|------------|------|-----------|
-| **Tunnel Builder** | [`/tunnels`](https://sshtoolkit.otaviomiranda.com.br/tunnels/) | Comandos de tunel SSH com diagramas visuais |
-| **Server Hardening** | [`/hardening`](https://sshtoolkit.otaviomiranda.com.br/hardening/) | sshd_config endurecido com score de seguranca |
-| **Client Config** | [`/config`](https://sshtoolkit.otaviomiranda.com.br/config/) | ~/.ssh/config com ProxyJump, drag-reorder e import |
-| **Key Generator** | [`/keygen`](https://sshtoolkit.otaviomiranda.com.br/keygen/) | Chaves Ed25519/RSA via Web Crypto API |
+| Tool | Route | Purpose |
+| --- | --- | --- |
+| Tunnel Builder | [`/tunnels`](https://sshtoolkit.otaviomiranda.com.br/tunnels/) | Build SSH tunnel commands with visual diagrams. |
+| Server Hardening | [`/hardening`](https://sshtoolkit.otaviomiranda.com.br/hardening/) | Generate hardened `sshd_config` output with presets and a security score. |
+| Client Config | [`/config`](https://sshtoolkit.otaviomiranda.com.br/config/) | Build, import, preview, copy, and download `~/.ssh/config` entries. |
+| Key Generator | [`/keygen`](https://sshtoolkit.otaviomiranda.com.br/keygen/) | Generate Ed25519 and RSA key pairs with Web Crypto. |
 
-### Tunnel Builder
+## Privacy Model
 
-Monte comandos de SSH Tunnel com diagramas visuais.
+- Static Astro site. The browser is the runtime.
+- No API calls are needed for any tool.
+- No user SSH key, config, hostname, command, or generated file is sent to a
+  server by the app.
+- The generated output is shown locally and can be copied or downloaded from the
+  browser.
+- You can verify this by opening DevTools and checking the Network tab while
+  using the tools.
 
-- Local Forward (`-L`), Remote Forward (`-R`), Dynamic/SOCKS (`-D`)
-- Multiplos tuneis em um unico comando
-- Flags: `-N`, `-f`, `-C`, `ExitOnForwardFailure`, keepalive
-- Saida: comando SSH, `autossh` persistente, bloco `~/.ssh/config`
-- Diagrama visual por tunel
-- Cards de caso de uso: "Acessar banco remoto", "Expor servidor local", "Navegar via proxy"
+## Client Config
 
-### Server Hardening
+The Client Config tool builds a `~/.ssh/config` file from editable host cards.
+Each card can be collapsed, removed, reordered with drag-and-drop, copied through
+the final output, and included in a downloaded `config` file.
 
-Gere um `sshd_config` endurecido com score de seguranca.
+Supported basic fields:
 
-- Presets: Paranoico (A+), Equilibrado (A), Permissivo (B)
-- Score de seguranca 0-100 com nota A-F
-- Warnings por severidade (danger, warn, info)
-- Script de aplicacao (backup + test + restart)
-- Tooltips explicando cada diretiva
+- `Host`
+- `HostName`
+- `User`
+- `Port`
+- `IdentityFile`
+- `ProxyJump`
 
-### Client Config
+Supported advanced fields:
 
-Monte seu `~/.ssh/config` visualmente.
+- `ForwardAgent`
+- `IdentitiesOnly`
+- `AddKeysToAgent`
+- `HostKeyAlias`
+- `StrictHostKeyChecking`
+- `UserKnownHostsFile`
+- `LogLevel`
+- `IgnoreUnknown`
+- `RequestTTY`
+- `ServerAliveInterval`
+- `ServerAliveCountMax`
+- `LocalForward`
+- `RemoteForward`
+- `SendEnv`
+- `SetEnv`
+- `RemoteCommand`
+- `ExitOnForwardFailure`
 
-- CRUD de hosts com cards colapsaveis
-- ProxyJump chain visualization (Voce → bastion → destino)
-- Drag-and-drop para reordenar (a ordem importa no SSH)
-- Import: cole um config existente e edite visualmente
-- Opcoes avancadas: ForwardAgent, LocalForward, RemoteForward, etc.
+Generation behavior:
 
-### Key Generator
+- Empty values are omitted.
+- `Port 22` is omitted because it is the SSH default.
+- `ForwardAgent` and `ExitOnForwardFailure` are emitted as `yes` or `no` when
+  set.
+- `RequestTTY auto` is omitted because it is the default UI state.
+- Multiline fields emit one directive per non-empty line.
+- Unknown imported directives are preserved and emitted through `extraOptions`.
 
-Gere pares de chaves Ed25519 e RSA direto no navegador via Web Crypto API.
+Import behavior:
 
-- Ed25519 (recomendado), RSA 2048, RSA 4096
-- Download individual ou ZIP com README de instrucoes
-- Fingerprint SHA256
-- Comando `ssh-copy-id` e permissoes (`chmod`) prontos para copiar
-- Tooltips explicando cada tipo de chave
+- The import modal accepts an existing `~/.ssh/config` pasted as text.
+- `Key value` and `Key=value` syntax are both accepted.
+- Blank lines and comments are ignored.
+- Lines before the first `Host` block are ignored.
+- Known directives populate dedicated fields.
+- Unknown directives, for example `CanonicalizeHostname yes` and
+  `ConnectTimeout 10`, are preserved as extra options.
 
----
+## ProxyJump Workflow
 
-## Privacidade
+The current Client Config workflow includes a practical ProxyJump recipe and
+preview helpers for bastion/private-host setups.
 
-Tudo roda no seu navegador. Nenhum dado sai da sua maquina. Sem API, sem
-cookies, sem analytics. Abra o DevTools e confira a aba Network.
+Click the `Receita ProxyJump prática` card on `/config` to load:
 
----
+```sshconfig
+Host bastion
+    HostName bastion.example.com
+    User deploy
+    IdentityFile ~/.ssh/id_ed25519
 
-## Stack
+Host prod-db
+    HostName 10.0.10.20
+    User deploy
+    IdentityFile ~/.ssh/id_ed25519
+    IdentitiesOnly yes
+    ProxyJump bastion
+    HostKeyAlias prod-db-private
+```
 
-- [Astro](https://astro.build/) 6.x — static site generator
-- TypeScript 5.x
-- Web Crypto API (keygen)
-- [fflate](https://github.com/101arrowz/fflate) (ZIP)
-- [Vitest](https://vitest.dev/) (testes)
-- GitHub Pages (deploy)
+Expected visible behavior:
 
----
+- Both `bastion` and `prod-db` host cards are created and opened.
+- The `prod-db` card shows the visual chain `Você -> bastion -> prod-db`.
+- The generated config keeps `IdentitiesOnly yes`, `ProxyJump bastion`, and
+  `HostKeyAlias prod-db-private`.
+- ProxyJump command previews appear for `prod-db`.
+- Copy buttons work for the final config and each generated preview.
 
-## Desenvolvimento
+Expected command previews from the recipe:
 
 ```bash
-# Requisitos: Node.js >= 22.12.0
+ssh prod-db
+ssh -J bastion -i ~/.ssh/id_ed25519 deploy@10.0.10.20
+scp -o ProxyJump=bastion -i ~/.ssh/id_ed25519 ./local-file deploy@10.0.10.20:/remote/path/
+rsync -av -e 'ssh -J bastion -i ~/.ssh/id_ed25519' ./local-file deploy@10.0.10.20:/remote/path/
+```
 
-# Instalar dependencias
+ProxyJump edge cases:
+
+- A comma-separated value such as `bastion-edge,bastion-inner` is rendered as
+  separate hops in the chain.
+- The raw `ProxyJump` value is preserved in the generated config and in direct
+  command previews.
+- `ProxyJump none` is preserved in the generated config, but it is treated as no
+  active jump for chain visualization and command previews.
+- Nested jump-host aliases are resolved in the visual chain. For example, if
+  `app` jumps to `inner` and `inner` jumps to `edge`, the route is displayed as
+  `Você -> edge -> inner -> app`.
+- Circular jump-host references are guarded and marked in the chain.
+- Command previews are hidden for wildcard, negated, comma-separated, or
+  multi-alias `Host` patterns because those are not concrete SSH targets.
+- Preview commands are practical templates. Replace placeholder paths such as
+  `./local-file` and `/remote/path/` before using `scp` or `rsync`.
+
+## Tunnel Builder
+
+The Tunnel Builder creates SSH commands, `autossh` commands, equivalent
+`~/.ssh/config` blocks, and visual diagrams for tunnel direction.
+
+Supported tunnel types:
+
+- Local forward: `-L localPort:remoteHost:remotePort`
+- Remote forward: `-R remotePort:localHost:localPort`
+- Dynamic SOCKS proxy: `-D localPort`
+
+Supported SSH options:
+
+- SSH server, optional user, optional non-default port.
+- Optional private key through `-i`.
+- Optional jump host through `-J`.
+- `-N` for no remote shell.
+- `-f` for background mode.
+- `-C` for compression.
+- `ExitOnForwardFailure=yes`.
+- `ServerAliveInterval` and `ServerAliveCountMax`.
+- Multiple tunnels in a single command.
+
+Use-case cards load examples for:
+
+- Remote database access through a local forward.
+- Exposing a local development server through a remote forward.
+- Browsing through a remote SOCKS proxy.
+
+## Server Hardening
+
+The Server Hardening tool generates an `sshd_config` and an application script.
+It is designed for review before copying the generated file to a server.
+
+Presets:
+
+- Paranoid: public-key-only defaults, root login disabled, forwarding disabled.
+- Balanced: secure general-purpose defaults with TCP forwarding enabled.
+- Permissive: lab/testing defaults with more features enabled.
+
+Config areas:
+
+- Authentication: port, root login, public key auth, password auth,
+  keyboard-interactive auth, challenge-response auth, empty passwords,
+  authentication methods, max auth tries, login grace time, and PAM.
+- Access control: `AllowUsers`, `AllowGroups`, `DenyUsers`, and `DenyGroups`.
+- Network: `ListenAddress`, `AddressFamily`, client alive settings, and
+  `UseDNS`.
+- Security: X11 forwarding, agent forwarding, TCP forwarding, stream local
+  forwarding, gateway ports, tunnel permission, user environment, user RC,
+  strict modes, session limits, startups, and log level.
+- Banners: `PrintMotd`, `PrintLastLog`, and `Banner`.
+
+Review helpers:
+
+- Security score from 0 to 100 with grade `A` through `F`.
+- Warnings for dangerous, risky, or informational choices.
+- Copy button for the generated `sshd_config`.
+- Download button for `sshd_config`.
+- Download button for `apply-sshd.sh`, which backs up the current config, runs
+  `sshd -t`, and restarts the service when the generated config is valid.
+
+## Key Generator
+
+The Key Generator creates SSH key pairs locally with the Web Crypto API.
+
+Supported key types:
+
+- Ed25519, recommended for modern systems.
+- RSA 2048 for compatibility.
+- RSA 4096 for RSA-specific setups that want a larger key.
+
+Generated output:
+
+- Private key.
+- Public key.
+- SHA256 fingerprint.
+- Equivalent `ssh-keygen` command.
+- `ssh-copy-id` install command.
+- File permission commands for `~/.ssh`, private key, public key, and
+  `authorized_keys`.
+
+Download behavior:
+
+- Public key downloads as `id_ed25519.pub` or `id_rsa.pub`.
+- Private key downloads as `id_ed25519` or `id_rsa`.
+- ZIP download includes the private key, public key, and `README.txt` setup
+  instructions.
+
+Important limitation:
+
+- Generated keys are currently not encrypted with a passphrase. Protect the
+  downloaded private key and never share it.
+
+## Local Review Checklist
+
+Use this checklist to review the current behavior before merging a PR.
+
+```bash
+git fetch origin
+git switch codex/proxyjump-client-config-stack
 npm install
-
-# Dev server
-npm run dev
-
-# Rodar testes
 npm test
+npm run build
+npm run dev -- --host 127.0.0.1 --port 4321
+```
 
-# Build
+Open `http://127.0.0.1:4321/config/` and verify:
+
+- Clicking `Receita ProxyJump prática` creates `bastion` and `prod-db`.
+- The generated config matches the recipe shown in this README.
+- The visual route is `Você -> bastion -> prod-db`.
+- The `ssh`, `scp`, and `rsync` previews match the commands shown above.
+- Expanding advanced options on `prod-db` shows `IdentitiesOnly yes` and
+  `HostKeyAlias prod-db-private`.
+- Setting `ProxyJump` to `none` keeps `ProxyJump none` in the generated config
+  and hides the visual chain and previews.
+- Setting `ProxyJump` to `bastion-edge,bastion-inner` displays separate hop
+  nodes and keeps the raw comma-separated value in the direct command preview.
+- Importing a host with `IdentitiesOnly`, `AddKeysToAgent`, `LogLevel`,
+  `IgnoreUnknown`, `SendEnv`, `SetEnv`, `StrictHostKeyChecking`,
+  `UserKnownHostsFile`, and `HostKeyAlias` fills dedicated fields and
+  regenerates them as first-class directives.
+- Adding an unrelated unknown option still preserves it in generated output.
+- A wildcard host such as `*.prod` can keep `ProxyJump` in generated config, but
+  does not show command previews.
+
+Then spot-check the other routes:
+
+- `/keygen`: generate an Ed25519 key, verify fingerprint/public/private outputs,
+  copy buttons, individual downloads, ZIP download, install command, and
+  permission commands.
+- `/hardening`: switch each preset, verify score/warnings update, copy the
+  generated config, and download `sshd_config` plus `apply-sshd.sh`.
+- `/tunnels`: load each use-case card, verify the diagram, SSH command,
+  `autossh` command, equivalent config block, and copy buttons.
+
+## Out of Scope for the ProxyJump Stack
+
+The current ProxyJump Client Config stack does not implement:
+
+- `Match` blocks.
+- Bastion server hardening recipes.
+- `PermitOpen` or jump-only user generation.
+- Ansible previews.
+- SFTP previews.
+- Cloud-provider alternatives.
+- MFA, SSO, RBAC, audit/session recording, or governance workflows.
+- A site redesign.
+- Backend services.
+
+## Development
+
+Requirements:
+
+- Node.js >= 22.12.0
+
+Commands:
+
+```bash
+npm install
+npm run dev
+npm test
 npm run build
 ```
 
----
+Project stack:
 
-## Autor
+- Astro 6.x
+- TypeScript 5.x
+- Web Crypto API
+- fflate for ZIP generation
+- Vitest
+- GitHub Pages
 
-**Otavio Miranda** — [otaviomiranda.com.br](https://www.otaviomiranda.com.br)
+## Author
+
+**Otavio Miranda** - [otaviomiranda.com.br](https://www.otaviomiranda.com.br)
 
 - [YouTube](https://www.youtube.com/@otaboranern)
 - [GitHub](https://github.com/luizomf)
 
----
-
-## Licenca
+## License
 
 [MIT](./LICENSE)

@@ -21,8 +21,8 @@ import Footer from '../components/Footer.astro';
     <div class="usecase-cards">
       <button class="usecase-card" id="usecase-bastion">
         <span class="usecase-card__icon">🏰</span>
-        <span class="usecase-card__title">Acessar via bastion host</span>
-        <span class="usecase-card__desc">Dois hosts com ProxyJump configurado</span>
+        <span class="usecase-card__title">Receita ProxyJump prática</span>
+        <span class="usecase-card__desc">Bastion + host privado com previews</span>
       </button>
       <button class="usecase-card" id="usecase-multi-server">
         <span class="usecase-card__icon">🖥</span>
@@ -58,6 +58,31 @@ import Footer from '../components/Footer.astro';
       </div>
     </div>
   </div>
+
+  <datalist id="add-keys-to-agent-options">
+    <option value="yes"></option>
+    <option value="no"></option>
+    <option value="ask"></option>
+    <option value="confirm"></option>
+  </datalist>
+
+  <datalist id="log-level-options">
+    <option value="QUIET"></option>
+    <option value="FATAL"></option>
+    <option value="ERROR"></option>
+    <option value="INFO"></option>
+    <option value="VERBOSE"></option>
+    <option value="DEBUG1"></option>
+    <option value="DEBUG2"></option>
+    <option value="DEBUG3"></option>
+  </datalist>
+
+  <datalist id="strict-host-key-options">
+    <option value="yes"></option>
+    <option value="ask"></option>
+    <option value="accept-new"></option>
+    <option value="no"></option>
+  </datalist>
 
   <!-- Host order hint -->
   <p class="order-hint text-muted" id="order-hint" hidden>
@@ -352,9 +377,75 @@ import Footer from '../components/Footer.astro';
     color: var(--text-muted);
   }
 
+  /* Command previews */
+  .command-previews {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .command-previews__title {
+    margin-bottom: 0.5rem;
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .command-previews__grid {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .command-preview {
+    display: grid;
+    grid-template-columns: minmax(6rem, 8rem) minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .command-preview:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .command-preview:last-child {
+    padding-bottom: 0;
+  }
+
+  .command-preview__label {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .command-preview code {
+    min-width: 0;
+    overflow-x: auto;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    white-space: pre;
+  }
+
   @media (max-width: 640px) {
     .actions-bar {
       flex-direction: column;
+    }
+
+    .command-preview {
+      grid-template-columns: 1fr auto;
+    }
+
+    .command-preview__label,
+    .command-preview code {
+      grid-column: 1 / -1;
     }
   }
 </style>
@@ -362,15 +453,28 @@ import Footer from '../components/Footer.astro';
 <script>
   import { generateFullConfig, createEmptyHost } from '../lib/config-generator';
   import { parseConfig } from '../lib/config-parser';
+  import {
+    generateProxyJumpCommandPreviews,
+    hasActiveProxyJump,
+    resolveProxyJumpChain,
+  } from '../lib/config-preview';
   import { copyToClipboard } from '../lib/clipboard';
   import { downloadFile } from '../lib/download';
   import type { SshHostEntry } from '../lib/types';
+  import type { ProxyJumpCommandKind } from '../lib/config-preview';
 
   function tip(text: string): string {
     return `<span class="tooltip"><span class="tooltip__trigger" role="button" tabindex="0" aria-expanded="false" aria-label="Help">?</span><span class="tooltip__content" role="tooltip">${text}</span></span>`;
   }
 
   let hosts: SshHostEntry[] = [];
+
+  const previewLabels: Record<ProxyJumpCommandKind, string> = {
+    'ssh-alias': 'ssh alias',
+    'ssh-direct': 'ssh -J',
+    scp: 'scp',
+    rsync: 'rsync',
+  };
 
   const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -394,6 +498,7 @@ import Footer from '../components/Footer.astro';
 
     updateOutput();
     updateProxyChains();
+    updateCommandPreviews();
   }
 
   function updateOutput() {
@@ -429,15 +534,15 @@ import Footer from '../components/Footer.astro';
             <input type="text" data-field="host" value="${esc(entry.host)}" placeholder="prod-server" />
           </div>
           <div class="form-group">
-            <label>HostName (IP ou domínio)</label>
+            <label>HostName (IP ou domínio) ${tip('Endereço real do servidor para este alias. Pode ser IP, domínio ou host acessível a partir do jump host.')}</label>
             <input type="text" data-field="hostName" value="${esc(entry.hostName)}" placeholder="192.168.1.10" />
           </div>
           <div class="form-group">
-            <label>Usuário</label>
+            <label>Usuário ${tip('Usuário usado por padrão ao conectar neste host. Evita digitar usuario@host em cada comando.')}</label>
             <input type="text" data-field="user" value="${esc(entry.user)}" placeholder="deploy" />
           </div>
           <div class="form-group">
-            <label>Porta</label>
+            <label>Porta ${tip('Porta SSH do servidor. O padrão é 22; informe outra porta quando o sshd estiver configurado diferente.')}</label>
             <input type="number" data-field="port" value="${entry.port || 22}" min="1" max="65535" />
           </div>
           <div class="form-group">
@@ -450,6 +555,7 @@ import Footer from '../components/Footer.astro';
           </div>
         </div>
         <div class="proxy-chain" data-proxy-chain="${entry.id}" hidden></div>
+        <div class="command-previews" data-command-previews="${entry.id}" hidden></div>
         <button class="advanced-toggle" data-toggle="${entry.id}">+ Opções avançadas</button>
         <div class="advanced-fields form-grid" hidden data-advanced="${entry.id}">
           <div class="form-group">
@@ -461,7 +567,39 @@ import Footer from '../components/Footer.astro';
             </select>
           </div>
           <div class="form-group">
-            <label>RequestTTY</label>
+            <label>IdentitiesOnly ${tip('Use yes quando muitas chaves estão carregadas no agente e o servidor encerra a conexão por tentativas demais. Útil em hosts atrás de ProxyJump.')}</label>
+            <select data-field="identitiesOnly">
+              <option value=""${entry.identitiesOnly === undefined ? ' selected' : ''}>—</option>
+              <option value="yes"${entry.identitiesOnly === 'yes' ? ' selected' : ''}>yes</option>
+              <option value="no"${entry.identitiesOnly === 'no' ? ' selected' : ''}>no</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>AddKeysToAgent ${tip('Controla se a chave entra no ssh-agent depois do uso. Valores comuns: yes, no, ask e confirm.')}</label>
+            <input type="text" list="add-keys-to-agent-options" data-field="addKeysToAgent" value="${esc(entry.addKeysToAgent)}" placeholder="confirm" />
+          </div>
+          <div class="form-group">
+            <label>HostKeyAlias ${tip('Nome usado no known_hosts. Ajuda quando redes privadas diferentes reutilizam o mesmo IP atrás de bastions.')}</label>
+            <input type="text" data-field="hostKeyAlias" value="${esc(entry.hostKeyAlias)}" placeholder="prod-db-private" />
+          </div>
+          <div class="form-group">
+            <label>StrictHostKeyChecking ${tip('Escolha avançada para política de known_hosts. Use no apenas de forma explícita e temporária.')}</label>
+            <input type="text" list="strict-host-key-options" data-field="strictHostKeyChecking" value="${esc(entry.strictHostKeyChecking)}" placeholder="accept-new" />
+          </div>
+          <div class="form-group">
+            <label>UserKnownHostsFile ${tip('Arquivo onde o SSH grava e consulta fingerprints conhecidos. Útil para separar known_hosts por ambiente ou bastion.')}</label>
+            <input type="text" data-field="userKnownHostsFile" value="${esc(entry.userKnownHostsFile)}" placeholder="~/.ssh/known_hosts" />
+          </div>
+          <div class="form-group">
+            <label>LogLevel ${tip('Nível de logs do cliente SSH. VERBOSE ajuda auditoria e troubleshooting sem chegar ao volume de DEBUG.')}</label>
+            <input type="text" list="log-level-options" data-field="logLevel" value="${esc(entry.logLevel)}" placeholder="VERBOSE" />
+          </div>
+          <div class="form-group">
+            <label>IgnoreUnknown ${tip('Instrui clientes SSH a ignorarem opções desconhecidas. Ajuda em configs compartilhadas entre macOS, Linux e versões diferentes.')}</label>
+            <input type="text" data-field="ignoreUnknown" value="${esc(entry.ignoreUnknown)}" placeholder="UseKeychain,AddKeysToAgent" />
+          </div>
+          <div class="form-group">
+            <label>RequestTTY ${tip('Controla se o SSH solicita um terminal remoto. force é útil para comandos interativos; no evita TTY em automações.')}</label>
             <select data-field="requestTTY">
               <option value="auto"${entry.requestTTY === 'auto' || !entry.requestTTY ? ' selected' : ''}>auto</option>
               <option value="yes"${entry.requestTTY === 'yes' ? ' selected' : ''}>yes</option>
@@ -470,11 +608,11 @@ import Footer from '../components/Footer.astro';
             </select>
           </div>
           <div class="form-group">
-            <label>ServerAliveInterval <span class="text-muted">(s)</span></label>
+            <label>ServerAliveInterval <span class="text-muted">(s)</span> ${tip('Intervalo em segundos para o cliente enviar keepalive ao servidor. Ajuda em conexões atrás de NAT ou firewall.')}</label>
             <input type="number" data-field="serverAliveInterval" value="${entry.serverAliveInterval || ''}" min="0" placeholder="60" />
           </div>
           <div class="form-group">
-            <label>ServerAliveCountMax</label>
+            <label>ServerAliveCountMax ${tip('Número de keepalives sem resposta antes do cliente encerrar a conexão. Multiplica com ServerAliveInterval para formar o timeout.')}</label>
             <input type="number" data-field="serverAliveCountMax" value="${entry.serverAliveCountMax || ''}" min="0" placeholder="3" />
           </div>
           <div class="form-group form-group--full">
@@ -482,18 +620,26 @@ import Footer from '../components/Footer.astro';
             <textarea data-field="localForward" rows="2" placeholder="5432 localhost:5432">${(entry.localForward || []).join('\n')}</textarea>
           </div>
           <div class="form-group form-group--full">
-            <label>RemoteForward <span class="text-muted">(um por linha)</span></label>
+            <label>RemoteForward <span class="text-muted">(um por linha)</span> ${tip('Abre uma porta no servidor remoto e encaminha de volta para sua máquina. Formato comum: portaRemota hostLocal:portaLocal.')}</label>
             <textarea data-field="remoteForward" rows="2" placeholder="0.0.0.0:8080 localhost:3000">${(entry.remoteForward || []).join('\n')}</textarea>
           </div>
           <div class="form-group form-group--full">
-            <label>RemoteCommand</label>
+            <label>SendEnv <span class="text-muted">(um por linha)</span> ${tip('Lista variáveis do seu ambiente local que o cliente pode enviar ao servidor, se o servidor aceitar com AcceptEnv.')}</label>
+            <textarea data-field="sendEnv" rows="2" placeholder="LANG LC_*">${(entry.sendEnv || []).join('\n')}</textarea>
+          </div>
+          <div class="form-group form-group--full">
+            <label>SetEnv <span class="text-muted">(um por linha)</span> ${tip('Define variáveis fixas para esta conexão SSH. Use formato NOME=valor, uma por linha.')}</label>
+            <textarea data-field="setEnv" rows="2" placeholder="TERM=xterm-256color">${(entry.setEnv || []).join('\n')}</textarea>
+          </div>
+          <div class="form-group form-group--full">
+            <label>RemoteCommand ${tip('Comando executado automaticamente depois de conectar. Útil para abrir tmux, entrar em um container ou iniciar uma sessão específica.')}</label>
             <input type="text" data-field="remoteCommand" value="${esc(entry.remoteCommand)}" placeholder="tmux attach" />
           </div>
           <div class="form-group">
             <label class="toggle">
               <input type="checkbox" data-field="exitOnForwardFailure" ${entry.exitOnForwardFailure ? 'checked' : ''} />
               <span class="toggle__track"></span>
-              <span>ExitOnForwardFailure</span>
+              <span>ExitOnForwardFailure ${tip('Faz o SSH abortar quando um LocalForward, RemoteForward ou DynamicForward não consegue abrir a porta esperada.')}</span>
             </label>
           </div>
         </div>
@@ -535,7 +681,8 @@ import Footer from '../components/Footer.astro';
         titleEl.textContent = `Host ${entry.host || 'novo-host'}`;
         subtitleEl.textContent = [entry.user, entry.hostName].filter(Boolean).join('@');
         updateOutput();
-        if (field === 'proxyJump') updateProxyChains();
+        updateProxyChains();
+        updateCommandPreviews();
       };
       input.addEventListener('input', handler);
       input.addEventListener('change', handler);
@@ -551,12 +698,20 @@ import Footer from '../components/Footer.astro';
   ) {
     switch (field) {
       case 'host':
+        entry.host = input.value;
+        break;
       case 'hostName':
       case 'user':
       case 'identityFile':
+      case 'addKeysToAgent':
       case 'proxyJump':
+      case 'hostKeyAlias':
+      case 'strictHostKeyChecking':
+      case 'userKnownHostsFile':
+      case 'logLevel':
+      case 'ignoreUnknown':
       case 'remoteCommand':
-        (entry as Record<string, unknown>)[field] = input.value;
+        (entry as Record<string, unknown>)[field] = input.value || undefined;
         break;
       case 'port':
       case 'serverAliveInterval':
@@ -566,6 +721,11 @@ import Footer from '../components/Footer.astro';
       case 'forwardAgent':
         entry.forwardAgent = input.value === 'yes' ? true : input.value === 'no' ? false : undefined;
         break;
+      case 'identitiesOnly':
+        entry.identitiesOnly = input.value === 'yes' || input.value === 'no'
+          ? input.value
+          : undefined;
+        break;
       case 'requestTTY':
         entry.requestTTY = input.value as SshHostEntry['requestTTY'];
         break;
@@ -574,6 +734,8 @@ import Footer from '../components/Footer.astro';
         break;
       case 'localForward':
       case 'remoteForward':
+      case 'sendEnv':
+      case 'setEnv':
         (entry as Record<string, unknown>)[field] = (input as HTMLTextAreaElement).value
           .split('\n')
           .map((l: string) => l.trim())
@@ -584,38 +746,25 @@ import Footer from '../components/Footer.astro';
 
   function esc(value: string | undefined): string {
     if (!value) return '';
-    return value.replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
   }
 
   // --- ProxyJump chain resolver ---
-  function resolveChain(entry: SshHostEntry): string[] {
-    const chain: string[] = ['Você'];
-    const visited = new Set<string>();
-    let jump = entry.proxyJump;
-
-    while (jump) {
-      if (visited.has(jump)) break; // circular
-      visited.add(jump);
-      chain.push(jump);
-      const jumpHost = hosts.find(h => h.host === jump);
-      jump = jumpHost?.proxyJump;
-    }
-
-    chain.push(entry.host || 'destino');
-    return chain;
-  }
-
   function updateProxyChains() {
     for (const entry of hosts) {
       const el = document.querySelector(`[data-proxy-chain="${entry.id}"]`) as HTMLElement | null;
       if (!el) continue;
 
-      if (!entry.proxyJump) {
+      if (!hasActiveProxyJump(entry)) {
         el.hidden = true;
         continue;
       }
 
-      const chain = resolveChain(entry);
+      const chain = resolveProxyJumpChain(entry, hosts);
       el.hidden = false;
       el.innerHTML = chain
         .map((node, i) => {
@@ -625,6 +774,39 @@ import Footer from '../components/Footer.astro';
             : nodeHtml;
         })
         .join(' ');
+    }
+  }
+
+  function updateCommandPreviews() {
+    for (const entry of hosts) {
+      const el = document.querySelector(
+        `[data-command-previews="${entry.id}"]`,
+      ) as HTMLElement | null;
+      if (!el) continue;
+
+      const previews = generateProxyJumpCommandPreviews(entry);
+      if (previews.length === 0) {
+        el.hidden = true;
+        el.innerHTML = '';
+        continue;
+      }
+
+      el.hidden = false;
+      el.innerHTML = `
+        <div class="command-previews__title">Previews ProxyJump</div>
+        <div class="command-previews__grid">
+          ${previews.map((preview) => {
+            const id = `preview-${entry.id}-${preview.kind}`;
+            return `
+              <div class="command-preview">
+                <span class="command-preview__label">${previewLabels[preview.kind]}</span>
+                <code id="${id}">${esc(preview.command)}</code>
+                <button class="btn btn--sm copy-btn" data-copy="${id}">Copiar</button>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
     }
   }
 
@@ -711,17 +893,18 @@ import Footer from '../components/Footer.astro';
   });
 
   // --- Copy ---
-  document.querySelectorAll<HTMLButtonElement>('.copy-btn').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const targetId = btn.dataset.copy;
-      if (!targetId) return;
-      const target = $(targetId);
-      if (!target) return;
-      const success = await copyToClipboard(target.textContent || '');
-      const original = btn.textContent;
-      btn.textContent = success ? 'Copiado!' : 'Erro';
-      setTimeout(() => (btn.textContent = original), 1500);
-    });
+  document.addEventListener('click', async (event) => {
+    const btn = (event.target as HTMLElement).closest<HTMLButtonElement>('.copy-btn');
+    if (!btn) return;
+
+    const targetId = btn.dataset.copy;
+    if (!targetId) return;
+    const target = $(targetId);
+    if (!target) return;
+    const success = await copyToClipboard(target.textContent || '');
+    const original = btn.textContent;
+    btn.textContent = success ? 'Copiado!' : 'Erro';
+    setTimeout(() => (btn.textContent = original), 1500);
   });
 
   // --- Download ---
@@ -734,16 +917,18 @@ import Footer from '../components/Footer.astro';
   $<HTMLButtonElement>('usecase-bastion').addEventListener('click', () => {
     const bastion = createEmptyHost();
     bastion.host = 'bastion';
-    bastion.hostName = 'bastion.exemplo.com';
+    bastion.hostName = 'bastion.example.com';
     bastion.user = 'deploy';
     bastion.identityFile = '~/.ssh/id_ed25519';
 
     const internal = createEmptyHost();
-    internal.host = 'db-server';
-    internal.hostName = '10.0.1.50';
+    internal.host = 'prod-db';
+    internal.hostName = '10.0.10.20';
     internal.user = 'deploy';
     internal.proxyJump = 'bastion';
     internal.identityFile = '~/.ssh/id_ed25519';
+    internal.identitiesOnly = 'yes';
+    internal.hostKeyAlias = 'prod-db-private';
 
     hosts = [bastion, internal];
     render();
@@ -755,22 +940,22 @@ import Footer from '../components/Footer.astro';
   $<HTMLButtonElement>('usecase-multi-server').addEventListener('click', () => {
     const prod = createEmptyHost();
     prod.host = 'prod';
-    prod.hostName = 'prod.exemplo.com';
+    prod.hostName = 'prod.example.com';
     prod.user = 'deploy';
     prod.port = 22;
     prod.identityFile = '~/.ssh/id_ed25519';
 
     const staging = createEmptyHost();
     staging.host = 'staging';
-    staging.hostName = 'staging.exemplo.com';
+    staging.hostName = 'staging.example.com';
     staging.user = 'deploy';
     staging.port = 22;
     staging.identityFile = '~/.ssh/id_ed25519';
 
     const db = createEmptyHost();
     db.host = 'db';
-    db.hostName = '10.0.1.50';
-    db.user = 'admin';
+    db.hostName = '10.0.10.20';
+    db.user = 'deploy';
     db.proxyJump = 'prod';
     db.identityFile = '~/.ssh/id_ed25519';
 

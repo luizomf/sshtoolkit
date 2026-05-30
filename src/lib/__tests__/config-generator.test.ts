@@ -38,6 +38,22 @@ describe('generateHostBlock', () => {
     expect(result).toContain('IdentityFile ~/.ssh/id_ed25519');
   });
 
+  it('includes IdentitiesOnly yes/no when selected', () => {
+    expect(generateHostBlock(makeHost({ identitiesOnly: 'yes' }))).toContain(
+      'IdentitiesOnly yes',
+    );
+    expect(generateHostBlock(makeHost({ identitiesOnly: 'no' }))).toContain('IdentitiesOnly no');
+  });
+
+  it('includes AddKeysToAgent common and custom values', () => {
+    expect(generateHostBlock(makeHost({ addKeysToAgent: 'confirm' }))).toContain(
+      'AddKeysToAgent confirm',
+    );
+    expect(generateHostBlock(makeHost({ addKeysToAgent: '5m' }))).toContain(
+      'AddKeysToAgent 5m',
+    );
+  });
+
   it('includes ProxyJump', () => {
     const entry = makeHost({ proxyJump: 'bastion' });
     const result = generateHostBlock(entry);
@@ -52,6 +68,43 @@ describe('generateHostBlock', () => {
   it('does not include ForwardAgent when undefined', () => {
     const result = generateHostBlock(makeHost());
     expect(result).not.toContain('ForwardAgent');
+  });
+
+  it('includes logging and compatibility options', () => {
+    const entry = makeHost({
+      logLevel: 'VERBOSE',
+      ignoreUnknown: 'UseKeychain,AddKeysToAgent',
+    });
+    const result = generateHostBlock(entry);
+    expect(result).toContain('LogLevel VERBOSE');
+    expect(result).toContain('IgnoreUnknown UseKeychain,AddKeysToAgent');
+  });
+
+  it('includes repeated environment directives', () => {
+    const entry = makeHost({
+      sendEnv: ['LANG LC_*', 'TERM'],
+      setEnv: ['TERM=xterm-256color', 'APP_ENV=prod'],
+    });
+    const result = generateHostBlock(entry);
+    expect(result).toContain('SendEnv LANG LC_*');
+    expect(result).toContain('SendEnv TERM');
+    expect(result).toContain('SetEnv TERM=xterm-256color');
+    expect(result).toContain('SetEnv APP_ENV=prod');
+  });
+
+  it('includes host key policy options', () => {
+    const entry = makeHost({
+      strictHostKeyChecking: 'accept-new',
+      userKnownHostsFile: '~/.ssh/known_hosts',
+    });
+    const result = generateHostBlock(entry);
+    expect(result).toContain('StrictHostKeyChecking accept-new');
+    expect(result).toContain('UserKnownHostsFile ~/.ssh/known_hosts');
+  });
+
+  it('includes HostKeyAlias', () => {
+    const result = generateHostBlock(makeHost({ hostKeyAlias: 'prod-db-private' }));
+    expect(result).toContain('HostKeyAlias prod-db-private');
   });
 
   it('includes LocalForward entries', () => {
@@ -103,11 +156,11 @@ describe('generateHostBlock', () => {
 
   it('includes extra options', () => {
     const entry = makeHost({
-      extraOptions: { StrictHostKeyChecking: 'no', LogLevel: 'VERBOSE' },
+      extraOptions: { CanonicalizeHostname: 'yes', ConnectTimeout: '10' },
     });
     const result = generateHostBlock(entry);
-    expect(result).toContain('StrictHostKeyChecking no');
-    expect(result).toContain('LogLevel VERBOSE');
+    expect(result).toContain('CanonicalizeHostname yes');
+    expect(result).toContain('ConnectTimeout 10');
   });
 
   it('generates a full featured host', () => {

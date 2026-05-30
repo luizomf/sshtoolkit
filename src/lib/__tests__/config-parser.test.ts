@@ -47,6 +47,38 @@ Host bastion
     expect(result[0].proxyJump).toBe('gateway');
   });
 
+  it('parses IdentitiesOnly into a dedicated field', () => {
+    const input = `
+Host prod
+    HostName app.internal
+    IdentitiesOnly yes
+
+Host staging
+    HostName staging.example.com
+    IdentitiesOnly no
+`;
+    const result = parseConfig(input);
+    expect(result[0].identitiesOnly).toBe('yes');
+    expect(result[1].identitiesOnly).toBe('no');
+    expect(result[0].extraOptions).toBeUndefined();
+  });
+
+  it('parses AddKeysToAgent common and custom values', () => {
+    const input = `
+Host app
+    HostName app.internal
+    AddKeysToAgent confirm
+
+Host app-short
+    HostName app-short.internal
+    AddKeysToAgent 5m
+`;
+    const result = parseConfig(input);
+    expect(result[0].addKeysToAgent).toBe('confirm');
+    expect(result[1].addKeysToAgent).toBe('5m');
+    expect(result[0].extraOptions).toBeUndefined();
+  });
+
   it('parses ForwardAgent', () => {
     const input = `
 Host dev
@@ -106,17 +138,69 @@ Host tunnel
     expect(result[0].exitOnForwardFailure).toBe(true);
   });
 
+  it('parses logging and compatibility options into dedicated fields', () => {
+    const input = `
+Host verbose
+    HostName verbose.example.com
+    LogLevel DEBUG1
+    IgnoreUnknown UseKeychain,AddKeysToAgent
+`;
+    const result = parseConfig(input);
+    expect(result[0].logLevel).toBe('DEBUG1');
+    expect(result[0].ignoreUnknown).toBe('UseKeychain,AddKeysToAgent');
+    expect(result[0].extraOptions).toBeUndefined();
+  });
+
+  it('parses repeated environment directives into arrays', () => {
+    const input = `
+Host env-app
+    HostName app.internal
+    SendEnv LANG LC_*
+    SendEnv TERM
+    SetEnv TERM=xterm-256color
+    SetEnv APP_ENV=prod
+`;
+    const result = parseConfig(input);
+    expect(result[0].sendEnv).toEqual(['LANG LC_*', 'TERM']);
+    expect(result[0].setEnv).toEqual(['TERM=xterm-256color', 'APP_ENV=prod']);
+    expect(result[0].extraOptions).toBeUndefined();
+  });
+
+  it('parses host key policy options into dedicated fields', () => {
+    const input = `
+Host private-db
+    HostName 10.0.10.20
+    StrictHostKeyChecking accept-new
+    UserKnownHostsFile ~/.ssh/known_hosts
+`;
+    const result = parseConfig(input);
+    expect(result[0].strictHostKeyChecking).toBe('accept-new');
+    expect(result[0].userKnownHostsFile).toBe('~/.ssh/known_hosts');
+    expect(result[0].extraOptions).toBeUndefined();
+  });
+
+  it('parses HostKeyAlias into a dedicated field', () => {
+    const input = `
+Host private-db
+    HostName 10.0.10.20
+    HostKeyAlias prod-db-private
+`;
+    const result = parseConfig(input);
+    expect(result[0].hostKeyAlias).toBe('prod-db-private');
+    expect(result[0].extraOptions).toBeUndefined();
+  });
+
   it('stores unknown options in extraOptions', () => {
     const input = `
 Host strict
     HostName server
-    StrictHostKeyChecking no
-    LogLevel VERBOSE
+    CanonicalizeHostname yes
+    ConnectTimeout 10
 `;
     const result = parseConfig(input);
     expect(result[0].extraOptions).toEqual({
-      StrictHostKeyChecking: 'no',
-      LogLevel: 'VERBOSE',
+      CanonicalizeHostname: 'yes',
+      ConnectTimeout: '10',
     });
   });
 

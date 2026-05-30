@@ -390,7 +390,7 @@ resemblance. Visitors to both sites will know they're from the same author.
 - [x] Equivalent `~/.ssh/config` block output
 - [x] Tests for command generation
 
-**Why tunnels first:** companion to the SSH Tunnels article/video
+**Why tunnels first:** companion to SSH Tunnels learning material
 (published 2026-03-25). Exercises all shared components (form → preview →
 copy pattern) without crypto complexity.
 
