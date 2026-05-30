@@ -61,7 +61,7 @@ import Tooltip from '../components/Tooltip.astro';
     <h2 class="section__title">Autenticação</h2>
     <div class="form-grid">
       <div class="form-group">
-        <label for="port">Porta SSH</label>
+        <label for="port">Porta SSH <Tooltip text="Porta onde o sshd escuta. Trocar a 22 pode reduzir ruído de scans, mas não substitui chave forte, firewall e boas políticas." /></label>
         <input type="number" id="port" value="22" min="1" max="65535" />
       </div>
       <div class="form-group">
@@ -77,7 +77,7 @@ import Tooltip from '../components/Tooltip.astro';
         <label class="toggle">
           <input type="checkbox" id="pubkey-auth" checked />
           <span class="toggle__track"></span>
-          <span>PubkeyAuthentication</span>
+          <span>PubkeyAuthentication <Tooltip text="Permite login por chave pública. Mantenha ativado para usar chaves SSH em vez de depender de senha." /></span>
         </label>
       </div>
       <div class="form-group">
@@ -96,14 +96,14 @@ import Tooltip from '../components/Tooltip.astro';
         <input type="number" id="max-auth-tries" value="3" min="1" max="20" />
       </div>
       <div class="form-group">
-        <label for="login-grace-time">LoginGraceTime <span class="text-muted">(s)</span></label>
+        <label for="login-grace-time">LoginGraceTime <span class="text-muted">(s)</span> <Tooltip text="Tempo máximo para concluir a autenticação. Valores menores reduzem janelas abertas para tentativas lentas ou automatizadas." /></label>
         <input type="number" id="login-grace-time" value="30" min="1" />
       </div>
       <div class="form-group">
         <label class="toggle">
           <input type="checkbox" id="permit-empty-passwords" />
           <span class="toggle__track"></span>
-          <span>PermitEmptyPasswords</span>
+          <span>PermitEmptyPasswords <Tooltip text="Permite contas com senha vazia entrarem por SSH. Deve ficar desativado em praticamente todos os servidores." /></span>
         </label>
       </div>
       <div class="form-group">
@@ -125,15 +125,15 @@ import Tooltip from '../components/Tooltip.astro';
         <input type="text" id="allow-users" placeholder="deploy admin" />
       </div>
       <div class="form-group">
-        <label for="allow-groups">AllowGroups</label>
+        <label for="allow-groups">AllowGroups <Tooltip text="Apenas membros destes grupos podem logar via SSH. Útil para limitar acesso a um grupo como ssh-users." /></label>
         <input type="text" id="allow-groups" placeholder="ssh-users" />
       </div>
       <div class="form-group">
-        <label for="deny-users">DenyUsers</label>
+        <label for="deny-users">DenyUsers <Tooltip text="Bloqueia explicitamente estes usuários no SSH. Use para negar contas específicas mesmo que outras regras permitam." /></label>
         <input type="text" id="deny-users" placeholder="" />
       </div>
       <div class="form-group">
-        <label for="deny-groups">DenyGroups</label>
+        <label for="deny-groups">DenyGroups <Tooltip text="Bloqueia membros destes grupos no SSH. Ajuda a negar acesso administrativo ou contas de serviço específicas." /></label>
         <input type="text" id="deny-groups" placeholder="" />
       </div>
     </div>
@@ -144,11 +144,11 @@ import Tooltip from '../components/Tooltip.astro';
     <h2 class="section__title">Rede</h2>
     <div class="form-grid">
       <div class="form-group">
-        <label for="listen-address">ListenAddress <span class="text-muted">(opcional)</span></label>
+        <label for="listen-address">ListenAddress <span class="text-muted">(opcional)</span> <Tooltip text="Limita em quais IPs/interfaces o sshd escuta. Vazio deixa o servidor ouvir em todos os endereços disponíveis." /></label>
         <input type="text" id="listen-address" placeholder="0.0.0.0" />
       </div>
       <div class="form-group">
-        <label for="address-family">AddressFamily</label>
+        <label for="address-family">AddressFamily <Tooltip text="Controla se o sshd usa IPv4, IPv6 ou ambos. Use inet para aceitar apenas IPv4, inet6 para apenas IPv6." /></label>
         <select id="address-family">
           <option value="any" selected>any</option>
           <option value="inet">inet (IPv4)</option>
@@ -156,18 +156,18 @@ import Tooltip from '../components/Tooltip.astro';
         </select>
       </div>
       <div class="form-group">
-        <label for="client-alive-interval">ClientAliveInterval <span class="text-muted">(s)</span></label>
+        <label for="client-alive-interval">ClientAliveInterval <span class="text-muted">(s)</span> <Tooltip text="Intervalo em segundos para o servidor enviar keepalive ao cliente. Ajuda a encerrar sessões mortas." /></label>
         <input type="number" id="client-alive-interval" value="300" min="0" />
       </div>
       <div class="form-group">
-        <label for="client-alive-count">ClientAliveCountMax</label>
+        <label for="client-alive-count">ClientAliveCountMax <Tooltip text="Quantidade de keepalives sem resposta antes de derrubar a sessão. Multiplica com ClientAliveInterval para definir o timeout." /></label>
         <input type="number" id="client-alive-count" value="2" min="0" />
       </div>
       <div class="form-group">
         <label class="toggle">
           <input type="checkbox" id="use-dns" />
           <span class="toggle__track"></span>
-          <span>UseDNS</span>
+          <span>UseDNS <Tooltip text="Faz lookup reverso de DNS no login. Normalmente fica desativado para evitar atrasos e dependência de DNS." /></span>
         </label>
       </div>
     </div>
@@ -188,7 +188,7 @@ import Tooltip from '../components/Tooltip.astro';
         <label class="toggle">
           <input type="checkbox" id="agent-forwarding" />
           <span class="toggle__track"></span>
-          <span>AllowAgentForwarding</span>
+          <span>AllowAgentForwarding <Tooltip text="Permite encaminhar o ssh-agent para este servidor. Conveniente em saltos, mas arriscado em máquinas não confiáveis." /></span>
         </label>
       </div>
       <div class="form-group">
@@ -202,11 +202,11 @@ import Tooltip from '../components/Tooltip.astro';
         <label class="toggle">
           <input type="checkbox" id="stream-local-forwarding" />
           <span class="toggle__track"></span>
-          <span>AllowStreamLocalForwarding</span>
+          <span>AllowStreamLocalForwarding <Tooltip text="Permite forwarding de sockets Unix. Desative se usuários não precisam criar túneis por socket local." /></span>
         </label>
       </div>
       <div class="form-group">
-        <label for="gateway-ports">GatewayPorts</label>
+        <label for="gateway-ports">GatewayPorts <Tooltip text="Controla se túneis remotos podem escutar fora de localhost. yes pode expor portas para a rede inteira." /></label>
         <select id="gateway-ports">
           <option value="no" selected>no</option>
           <option value="clientspecified">clientspecified</option>
@@ -217,32 +217,32 @@ import Tooltip from '../components/Tooltip.astro';
         <label class="toggle">
           <input type="checkbox" id="permit-tunnel" />
           <span class="toggle__track"></span>
-          <span>PermitTunnel</span>
+          <span>PermitTunnel <Tooltip text="Permite dispositivos tun/tap via SSH, usados para VPNs. Deixe desligado se esse recurso não for necessário." /></span>
         </label>
       </div>
       <div class="form-group">
         <label class="toggle">
           <input type="checkbox" id="permit-user-env" />
           <span class="toggle__track"></span>
-          <span>PermitUserEnvironment</span>
+          <span>PermitUserEnvironment <Tooltip text="Permite que usuários definam variáveis de ambiente no SSH. Pode contornar restrições, então mantenha desativado." /></span>
         </label>
       </div>
       <div class="form-group">
         <label class="toggle">
           <input type="checkbox" id="permit-user-rc" />
           <span class="toggle__track"></span>
-          <span>PermitUserRC</span>
+          <span>PermitUserRC <Tooltip text="Executa ~/.ssh/rc após o login. Desative quando quiser reduzir hooks controlados pelo usuário." /></span>
         </label>
       </div>
       <div class="form-group">
         <label class="toggle">
           <input type="checkbox" id="strict-modes" checked />
           <span class="toggle__track"></span>
-          <span>StrictModes</span>
+          <span>StrictModes <Tooltip text="Valida permissões e dono de arquivos SSH antes do login. Mantém chaves e authorized_keys com permissões seguras." /></span>
         </label>
       </div>
       <div class="form-group">
-        <label for="max-sessions">MaxSessions</label>
+        <label for="max-sessions">MaxSessions <Tooltip text="Número máximo de sessões abertas dentro da mesma conexão SSH. Limita multiplexing e sessões simultâneas." /></label>
         <input type="number" id="max-sessions" value="5" min="1" />
       </div>
       <div class="form-group">
@@ -271,18 +271,18 @@ import Tooltip from '../components/Tooltip.astro';
         <label class="toggle">
           <input type="checkbox" id="print-motd" />
           <span class="toggle__track"></span>
-          <span>PrintMotd</span>
+          <span>PrintMotd <Tooltip text="Mostra a mensagem do dia no login. Pode ser útil para avisos, mas nem sempre é desejado em automações." /></span>
         </label>
       </div>
       <div class="form-group">
         <label class="toggle">
           <input type="checkbox" id="print-last-log" checked />
           <span class="toggle__track"></span>
-          <span>PrintLastLog</span>
+          <span>PrintLastLog <Tooltip text="Mostra o último login do usuário. Ajuda a perceber acessos inesperados." /></span>
         </label>
       </div>
       <div class="form-group form-group--full">
-        <label for="banner">Banner <span class="text-muted">(caminho do arquivo)</span></label>
+        <label for="banner">Banner <span class="text-muted">(caminho do arquivo)</span> <Tooltip text="Arquivo exibido antes da autenticação. Use para avisos legais ou mensagens institucionais curtas." /></label>
         <input type="text" id="banner" placeholder="/etc/ssh/banner.txt" />
       </div>
     </div>

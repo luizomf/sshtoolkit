@@ -534,15 +534,15 @@ import Footer from '../components/Footer.astro';
             <input type="text" data-field="host" value="${esc(entry.host)}" placeholder="prod-server" />
           </div>
           <div class="form-group">
-            <label>HostName (IP ou domínio)</label>
+            <label>HostName (IP ou domínio) ${tip('Endereço real do servidor para este alias. Pode ser IP, domínio ou host acessível a partir do jump host.')}</label>
             <input type="text" data-field="hostName" value="${esc(entry.hostName)}" placeholder="192.168.1.10" />
           </div>
           <div class="form-group">
-            <label>Usuário</label>
+            <label>Usuário ${tip('Usuário usado por padrão ao conectar neste host. Evita digitar usuario@host em cada comando.')}</label>
             <input type="text" data-field="user" value="${esc(entry.user)}" placeholder="deploy" />
           </div>
           <div class="form-group">
-            <label>Porta</label>
+            <label>Porta ${tip('Porta SSH do servidor. O padrão é 22; informe outra porta quando o sshd estiver configurado diferente.')}</label>
             <input type="number" data-field="port" value="${entry.port || 22}" min="1" max="65535" />
           </div>
           <div class="form-group">
@@ -587,19 +587,19 @@ import Footer from '../components/Footer.astro';
             <input type="text" list="strict-host-key-options" data-field="strictHostKeyChecking" value="${esc(entry.strictHostKeyChecking)}" placeholder="accept-new" />
           </div>
           <div class="form-group">
-            <label>UserKnownHostsFile</label>
+            <label>UserKnownHostsFile ${tip('Arquivo onde o SSH grava e consulta fingerprints conhecidos. Útil para separar known_hosts por ambiente ou bastion.')}</label>
             <input type="text" data-field="userKnownHostsFile" value="${esc(entry.userKnownHostsFile)}" placeholder="~/.ssh/known_hosts" />
           </div>
           <div class="form-group">
-            <label>LogLevel</label>
+            <label>LogLevel ${tip('Nível de logs do cliente SSH. VERBOSE ajuda auditoria e troubleshooting sem chegar ao volume de DEBUG.')}</label>
             <input type="text" list="log-level-options" data-field="logLevel" value="${esc(entry.logLevel)}" placeholder="VERBOSE" />
           </div>
           <div class="form-group">
-            <label>IgnoreUnknown</label>
+            <label>IgnoreUnknown ${tip('Instrui clientes SSH a ignorarem opções desconhecidas. Ajuda em configs compartilhadas entre macOS, Linux e versões diferentes.')}</label>
             <input type="text" data-field="ignoreUnknown" value="${esc(entry.ignoreUnknown)}" placeholder="UseKeychain,AddKeysToAgent" />
           </div>
           <div class="form-group">
-            <label>RequestTTY</label>
+            <label>RequestTTY ${tip('Controla se o SSH solicita um terminal remoto. force é útil para comandos interativos; no evita TTY em automações.')}</label>
             <select data-field="requestTTY">
               <option value="auto"${entry.requestTTY === 'auto' || !entry.requestTTY ? ' selected' : ''}>auto</option>
               <option value="yes"${entry.requestTTY === 'yes' ? ' selected' : ''}>yes</option>
@@ -608,11 +608,11 @@ import Footer from '../components/Footer.astro';
             </select>
           </div>
           <div class="form-group">
-            <label>ServerAliveInterval <span class="text-muted">(s)</span></label>
+            <label>ServerAliveInterval <span class="text-muted">(s)</span> ${tip('Intervalo em segundos para o cliente enviar keepalive ao servidor. Ajuda em conexões atrás de NAT ou firewall.')}</label>
             <input type="number" data-field="serverAliveInterval" value="${entry.serverAliveInterval || ''}" min="0" placeholder="60" />
           </div>
           <div class="form-group">
-            <label>ServerAliveCountMax</label>
+            <label>ServerAliveCountMax ${tip('Número de keepalives sem resposta antes do cliente encerrar a conexão. Multiplica com ServerAliveInterval para formar o timeout.')}</label>
             <input type="number" data-field="serverAliveCountMax" value="${entry.serverAliveCountMax || ''}" min="0" placeholder="3" />
           </div>
           <div class="form-group form-group--full">
@@ -620,26 +620,26 @@ import Footer from '../components/Footer.astro';
             <textarea data-field="localForward" rows="2" placeholder="5432 localhost:5432">${(entry.localForward || []).join('\n')}</textarea>
           </div>
           <div class="form-group form-group--full">
-            <label>RemoteForward <span class="text-muted">(um por linha)</span></label>
+            <label>RemoteForward <span class="text-muted">(um por linha)</span> ${tip('Abre uma porta no servidor remoto e encaminha de volta para sua máquina. Formato comum: portaRemota hostLocal:portaLocal.')}</label>
             <textarea data-field="remoteForward" rows="2" placeholder="0.0.0.0:8080 localhost:3000">${(entry.remoteForward || []).join('\n')}</textarea>
           </div>
           <div class="form-group form-group--full">
-            <label>SendEnv <span class="text-muted">(um por linha)</span></label>
+            <label>SendEnv <span class="text-muted">(um por linha)</span> ${tip('Lista variáveis do seu ambiente local que o cliente pode enviar ao servidor, se o servidor aceitar com AcceptEnv.')}</label>
             <textarea data-field="sendEnv" rows="2" placeholder="LANG LC_*">${(entry.sendEnv || []).join('\n')}</textarea>
           </div>
           <div class="form-group form-group--full">
-            <label>SetEnv <span class="text-muted">(um por linha)</span></label>
+            <label>SetEnv <span class="text-muted">(um por linha)</span> ${tip('Define variáveis fixas para esta conexão SSH. Use formato NOME=valor, uma por linha.')}</label>
             <textarea data-field="setEnv" rows="2" placeholder="TERM=xterm-256color">${(entry.setEnv || []).join('\n')}</textarea>
           </div>
           <div class="form-group form-group--full">
-            <label>RemoteCommand</label>
+            <label>RemoteCommand ${tip('Comando executado automaticamente depois de conectar. Útil para abrir tmux, entrar em um container ou iniciar uma sessão específica.')}</label>
             <input type="text" data-field="remoteCommand" value="${esc(entry.remoteCommand)}" placeholder="tmux attach" />
           </div>
           <div class="form-group">
             <label class="toggle">
               <input type="checkbox" data-field="exitOnForwardFailure" ${entry.exitOnForwardFailure ? 'checked' : ''} />
               <span class="toggle__track"></span>
-              <span>ExitOnForwardFailure</span>
+              <span>ExitOnForwardFailure ${tip('Faz o SSH abortar quando um LocalForward, RemoteForward ou DynamicForward não consegue abrir a porta esperada.')}</span>
             </label>
           </div>
         </div>
